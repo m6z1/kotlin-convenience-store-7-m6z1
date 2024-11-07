@@ -55,7 +55,7 @@ class ProductsManager {
         _products.addAll(updateProducts)
     }
 
-    fun isPossiblePay(productName: String, quantityToPurchase: Int): Boolean {
+    fun isPossiblePurchase(productName: String, quantityToPurchase: Int): Boolean {
         val productsToPurchase = _products.filter { it[0] == productName }
         val purchasableQuantity = productsToPurchase.sumOf { it[2].toInt() }
 
