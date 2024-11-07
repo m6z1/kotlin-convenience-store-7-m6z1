@@ -11,8 +11,11 @@ class OutputView {
 
     fun printProducts(products: List<List<String>>) {
         products.forEach { product ->
-            val productCount: String = if (product[2].toInt() == 0) "재고없음" else product[2].toInt().toString() + "개"
-            println("- ${product[0]} ${THOUSAND_COMMA.format(product[1].toInt())}원 $productCount ${product[3]}")
+            if (product[2] == "재고 없음") {
+                println("- ${product[0]} ${THOUSAND_COMMA.format(product[1].toInt())}원 재고 없음")
+                return@forEach
+            }
+            println("- ${product[0]} ${THOUSAND_COMMA.format(product[1].toInt())}원 ${product[2].toInt()}개 ${product[3]}")
         }
     }
 

@@ -3,7 +3,7 @@ package store
 import java.io.File
 
 class ProductsManager {
-    private val _products: MutableList<List<String>> = emptyList<List<String>>().toMutableList()
+    private val _products: MutableList<MutableList<String>> = mutableListOf()
     val products: List<List<String>> get() = _products
 
     init {
@@ -14,8 +14,11 @@ class ProductsManager {
         val productsLine = readProductsFile()
         val productsLineExceptTitle = productsLine.filter { it != productsLine[0] }
         productsLineExceptTitle.forEach { product ->
-            _products.add(product.split(","))
+            _products.add(product.split(",").toMutableList())
         }
+
+        formatNullToBlank()
+        addOutOfProductNonePromotion()
     }
 
     private fun readProductsFile(): List<String> {
@@ -24,6 +27,32 @@ class ProductsManager {
         File(path).forEachLine { productsLine.add(it) }
 
         return productsLine
+    }
+
+    private fun formatNullToBlank() {
+        _products.forEach { product ->
+            if (product[3] == "null") {
+                product[3] = ""
+            }
+        }
+    }
+
+    private fun addOutOfProductNonePromotion() {
+        val sameProductCounts = _products.groupBy { it[0] }.mapValues { it.value.size }
+        val updateProducts = mutableListOf<MutableList<String>>()
+
+        for (product in _products) {
+            val productName = product[0]
+            if (sameProductCounts[productName] == 1 && product[3] != "") {
+                updateProducts.add(product)
+                updateProducts.add(mutableListOf(product[0], product[1], "재고 없음"))
+            } else {
+                updateProducts.add(product)
+            }
+        }
+
+        _products.clear()
+        _products.addAll(updateProducts)
     }
 
     fun isPossiblePay(productName: String, quantityToPurchase: Int): Boolean {
