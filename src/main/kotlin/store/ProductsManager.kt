@@ -4,6 +4,7 @@ import java.io.File
 
 class ProductsManager {
     private val _products: MutableList<List<String>> = emptyList<List<String>>().toMutableList()
+    val products: List<List<String>> get() = _products
 
     init {
         updateProducts()
