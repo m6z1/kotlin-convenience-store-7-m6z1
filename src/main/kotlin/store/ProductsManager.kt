@@ -24,4 +24,11 @@ class ProductsManager {
 
         return productsLine
     }
+
+    fun isPossiblePay(productName: String, quantityToPurchase: Int): Boolean {
+        val productsToPurchase = _products.filter { it[0] == productName }
+        val purchasableQuantity = productsToPurchase.sumOf { it[2].toInt() }
+
+        return purchasableQuantity >= quantityToPurchase
+    }
 }
