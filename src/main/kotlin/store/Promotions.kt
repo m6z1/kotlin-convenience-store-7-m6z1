@@ -1,6 +1,7 @@
 package store
 
 import java.io.File
+import java.time.LocalDate
 
 class Promotions {
     private val promotions: MutableList<List<String>> = emptyList<List<String>>().toMutableList()
@@ -23,5 +24,13 @@ class Promotions {
         File(path).forEachLine { productsLine.add(it) }
 
         return productsLine
+    }
+
+    fun isPossiblePromotionDiscount(promotionName: String, today: LocalDate): Boolean {
+        val promotion = promotions.firstOrNull { it[0] == promotionName } ?: return false
+
+        val startDate = LocalDate.parse(promotion[3])
+        val endDate = LocalDate.parse(promotion[4])
+        return today in startDate..endDate
     }
 }
