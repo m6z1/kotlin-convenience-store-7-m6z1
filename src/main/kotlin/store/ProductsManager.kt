@@ -55,10 +55,15 @@ class ProductsManager {
         _products.addAll(updateProducts)
     }
 
-    fun isPossiblePurchase(productName: String, quantityToPurchase: Int): Boolean {
-        val productsToPurchase = _products.filter { it[0] == productName }
-        val purchasableQuantity = productsToPurchase.sumOf { it[2].toInt() }
+    fun validPossiblePurchase(productsToPurchase: List<Map<String, Int>>) {
+        productsToPurchase.forEach { product ->
+            val productName = product.keys.first()
+            val quantityToPurchase = product.values.first()
+            val matchingProducts = _products.filter { it[0] == productName }
+            require(matchingProducts.isNotEmpty()) { "[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요." }
 
-        return purchasableQuantity >= quantityToPurchase
+            val purchasableQuantity = matchingProducts.sumOf { it[2].toIntOrNull() ?: 0 }
+            require(purchasableQuantity >= quantityToPurchase) { "[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요." }
+        }
     }
 }
