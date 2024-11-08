@@ -72,4 +72,11 @@ class ProductsManager {
             product[0] == productName
         }?.get(3)
     }
+
+    fun findPromotionStock(productName: String): Int {
+        val promotionProduct = products.firstOrNull { product ->
+            product[0] == productName && product[3].isNotBlank()
+        } ?: throw IllegalArgumentException("[ERROR] 존재하지 않는 상품입니다.")
+        return promotionProduct[3].toIntOrNull() ?: 0
+    }
 }

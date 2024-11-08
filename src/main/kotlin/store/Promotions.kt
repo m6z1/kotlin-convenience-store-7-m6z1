@@ -33,4 +33,9 @@ class Promotions {
         val endDate = LocalDate.parse(promotion[4])
         return today in startDate..endDate
     }
+
+    fun findPromotion(promotionName: String): List<String> {
+        return promotions.find { promotion -> promotion[0] == promotionName }
+            ?: throw IllegalArgumentException("[ERROR] 해당 프로모션 이름을 가진 프로모션은 존재하지 않습니다.")
+    }
 }
