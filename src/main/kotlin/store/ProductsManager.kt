@@ -67,7 +67,7 @@ class ProductsManager {
         }
     }
 
-    fun findPromotion(productName: String): String? {
+    fun findProductPromotion(productName: String): String? {
         return products.firstOrNull { product ->
             product[0] == productName
         }?.get(3)
@@ -75,8 +75,8 @@ class ProductsManager {
 
     fun findPromotionStock(productName: String): Int {
         val promotionProduct = products.firstOrNull { product ->
-            product[0] == productName && product[3].isNotBlank()
+            product[0] == productName && product[2].isNotBlank()
         } ?: throw IllegalArgumentException("[ERROR] 존재하지 않는 상품입니다.")
-        return promotionProduct[3].toIntOrNull() ?: 0
+        return promotionProduct[2].toIntOrNull() ?: 0
     }
 }

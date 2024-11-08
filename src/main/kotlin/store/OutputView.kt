@@ -17,6 +17,7 @@ class OutputView {
             }
             println("- ${product[0]} ${THOUSAND_COMMA.format(product[1].toInt())}원 ${product[2].toInt()}개 ${product[3]}")
         }
+        println()
     }
 
     companion object {

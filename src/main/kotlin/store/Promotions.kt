@@ -5,6 +5,7 @@ import java.time.LocalDate
 
 class Promotions {
     private val promotions: MutableList<List<String>> = emptyList<List<String>>().toMutableList()
+    private val productsManager = ProductsManager()
 
     init {
         updatePromotions()
@@ -34,8 +35,26 @@ class Promotions {
         return today in startDate..endDate
     }
 
-    fun findPromotion(promotionName: String): List<String> {
+    private fun findPromotion(promotionName: String): List<String> {
         return promotions.find { promotion -> promotion[0] == promotionName }
             ?: throw IllegalArgumentException("[ERROR] 해당 프로모션 이름을 가진 프로모션은 존재하지 않습니다.")
+    }
+
+    fun checkPromotion(product: Map<String, Int>): PromotionState {
+        val productName = product.keys.first()
+        val productCountToPurchase = product.values.first()
+        val promotionName = productsManager.findProductPromotion(productName = productName)
+        val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
+        val promotion = findPromotion(promotionName ?: return PromotionState.NONE)
+
+        if (promotionStock < (productCountToPurchase / promotion[1].toInt()) + productCountToPurchase) {
+            return PromotionState.NOT_ENOUGH_STOCK
+        }
+
+        if (productCountToPurchase < promotion[1].toInt()) {
+            return PromotionState.ELIGIBLE_BENEFIT
+        }
+
+        return PromotionState.AVAILABLE_BENEFIT
     }
 }
