@@ -66,4 +66,10 @@ class ProductsManager {
             require(purchasableQuantity >= quantityToPurchase) { "[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요." }
         }
     }
+
+    fun findPromotion(productName: String): String? {
+        return products.firstOrNull { product ->
+            product[0] == productName
+        }?.get(3)
+    }
 }
