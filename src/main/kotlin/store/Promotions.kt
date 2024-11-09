@@ -50,7 +50,7 @@ class Promotions {
             return PromotionState.NOT_ENOUGH_STOCK
         }
 
-        if (productCountToPurchase % (promotion[PROMOTION_BUY_COUNT_INDEX].toInt() + promotion[PROMOTION_GET_COUNT_INDEX].toInt()) == 1) {
+        if (productCountToPurchase % (promotion[PROMOTION_BUY_COUNT_INDEX].toInt() + promotion[PROMOTION_GET_COUNT_INDEX].toInt()) == promotion[PROMOTION_BUY_COUNT_INDEX].toInt()) {
             return PromotionState.ELIGIBLE_BENEFIT
         }
 
