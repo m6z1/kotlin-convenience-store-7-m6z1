@@ -1,5 +1,10 @@
 package store
 
+import store.products.ProductsManager
+import store.promotion.Promotions
+import store.view.InputView
+import store.view.OutputView
+
 fun main() {
     val inputView = InputView()
     val outputView = OutputView()

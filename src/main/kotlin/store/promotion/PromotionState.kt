@@ -1,4 +1,4 @@
-package store
+package store.promotion
 
 enum class PromotionState(private val title: String) {
     NONE("해당 없음"),

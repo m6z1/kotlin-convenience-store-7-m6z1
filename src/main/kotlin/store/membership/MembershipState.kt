@@ -1,4 +1,4 @@
-package store
+package store.membership
 
 enum class MembershipState(private val membershipMessage: String) {
     APPLICATION("Y"),

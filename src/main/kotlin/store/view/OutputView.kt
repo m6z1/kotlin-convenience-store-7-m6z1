@@ -1,4 +1,4 @@
-package store
+package store.view
 
 import java.text.DecimalFormat
 

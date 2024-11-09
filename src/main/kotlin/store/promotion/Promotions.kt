@@ -1,5 +1,6 @@
-package store
+package store.promotion
 
+import store.products.ProductsManager
 import java.io.File
 import java.time.LocalDate
 

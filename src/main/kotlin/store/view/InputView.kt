@@ -1,4 +1,4 @@
-package store
+package store.view
 
 import camp.nextstep.edu.missionutils.Console
 
