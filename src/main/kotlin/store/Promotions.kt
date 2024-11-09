@@ -28,15 +28,15 @@ class Promotions {
     }
 
     fun isPossiblePromotionDiscount(promotionName: String, today: LocalDate): Boolean {
-        val promotion = promotions.firstOrNull { it[0] == promotionName } ?: return false
+        val promotion = promotions.firstOrNull { it[PROMOTION_NAME_INDEX] == promotionName } ?: return false
 
-        val startDate = LocalDate.parse(promotion[3])
-        val endDate = LocalDate.parse(promotion[4])
+        val startDate = LocalDate.parse(promotion[PROMOTION_START_DATE_INDEX])
+        val endDate = LocalDate.parse(promotion[PROMOTION_END_DATE_INDEX])
         return today in startDate..endDate
     }
 
     private fun findPromotion(promotionName: String): List<String> {
-        return promotions.find { promotion -> promotion[0] == promotionName }
+        return promotions.find { promotion -> promotion[PROMOTION_NAME_INDEX] == promotionName }
             ?: throw IllegalArgumentException("[ERROR] 해당 프로모션 이름을 가진 프로모션은 존재하지 않습니다.")
     }
 
@@ -47,14 +47,22 @@ class Promotions {
         val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
         val promotion = findPromotion(promotionName ?: return PromotionState.NONE)
 
-        if (promotionStock < (productCountToPurchase / promotion[1].toInt()) + productCountToPurchase) {
+        if (promotionStock < (productCountToPurchase / promotion[PROMOTION_BUY_COUNT_INDEX].toInt()) + productCountToPurchase) {
             return PromotionState.NOT_ENOUGH_STOCK
         }
 
-        if (productCountToPurchase < promotion[1].toInt()) {
+        if (productCountToPurchase % (promotion[PROMOTION_BUY_COUNT_INDEX].toInt() + promotion[PROMOTION_GET_COUNT_INDEX].toInt()) == 1) {
             return PromotionState.ELIGIBLE_BENEFIT
         }
 
         return PromotionState.AVAILABLE_BENEFIT
+    }
+
+    companion object {
+        const val PROMOTION_NAME_INDEX = 0
+        const val PROMOTION_BUY_COUNT_INDEX = 1
+        const val PROMOTION_GET_COUNT_INDEX = 2
+        const val PROMOTION_START_DATE_INDEX = 3
+        const val PROMOTION_END_DATE_INDEX = 4
     }
 }
