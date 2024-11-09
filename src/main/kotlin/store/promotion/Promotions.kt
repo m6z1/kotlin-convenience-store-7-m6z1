@@ -1,5 +1,6 @@
 package store.promotion
 
+import store.ResponseState
 import store.products.ProductsManager
 import java.io.File
 import java.time.LocalDate
@@ -43,7 +44,8 @@ class Promotions {
     fun checkPromotion(product: Map<String, Int>): PromotionState {
         val productName = product.keys.first()
         val productCountToPurchase = product.values.first()
-        val promotionName = productsManager.findProductPromotion(productName = productName)?.takeIf { it.isNotEmpty() } ?: return PromotionState.NONE
+        val promotionName = productsManager.findProductPromotion(productName = productName)?.takeIf { it.isNotEmpty() }
+            ?: return PromotionState.NONE
         val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
         val promotion = findPromotion(promotionName)
 
@@ -56,6 +58,13 @@ class Promotions {
         }
 
         return PromotionState.AVAILABLE_BENEFIT
+    }
+
+    fun isAddingFreebie(addingFreebieState: ResponseState): Boolean {
+        return when (addingFreebieState) {
+            ResponseState.POSITIVE -> true
+            ResponseState.NEGATIVE -> false
+        }
     }
 
     companion object {

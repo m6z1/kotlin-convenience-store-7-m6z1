@@ -19,4 +19,9 @@ class InputView {
         println("멤버십 할인을 받으시겠습니까? (Y/N)")
         return Console.readLine()
     }
+
+    fun readAddingFreebie(productName: String): String {
+        println("현재 ${productName}은(는) 1개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)")
+        return Console.readLine()
+    }
 }

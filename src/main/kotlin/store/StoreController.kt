@@ -2,7 +2,6 @@ package store
 
 import camp.nextstep.edu.missionutils.DateTimes.now
 import store.membership.Membership
-import State.MembershipState
 import store.products.ProductsManager
 import store.promotion.PromotionState
 import store.promotion.Promotions
@@ -51,11 +50,42 @@ class StoreController(
                 }
 
                 PromotionState.NOT_ENOUGH_STOCK -> Unit
-                PromotionState.ELIGIBLE_BENEFIT -> Unit
+                PromotionState.ELIGIBLE_BENEFIT -> {
+                    if (checkFreebie(product.keys.first())) {
+                        receipt.addPurchasedProduct(
+                            PurchasedProduct(
+                                product.keys.first(),
+                                product.values.first() + 1,
+                                productsManager.findProductPrice(product.keys.first()),
+                            )
+                        )
+                        return@forEach
+                    }
+                    receipt.addPurchasedProduct(
+                        PurchasedProduct(
+                            product.keys.first(),
+                            product.values.first(),
+                            productsManager.findProductPrice(product.keys.first()),
+                        )
+                    )
+                }
+
                 PromotionState.AVAILABLE_BENEFIT -> Unit
             }
         }
     }
+
+    private fun checkFreebie(productName: String): Boolean {
+        while (true) {
+            try {
+                val addingFreebieState = ResponseState.from(inputView.readAddingFreebie(productName))
+                return promotions.isAddingFreebie(addingFreebieState)
+            } catch (e: IllegalArgumentException) {
+                println(e.message)
+            }
+        }
+    }
+
     private fun checkMembership(price: Int) {
         while (true) {
             try {
