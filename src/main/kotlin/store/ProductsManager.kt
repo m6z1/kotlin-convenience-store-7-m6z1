@@ -70,7 +70,7 @@ class ProductsManager {
     fun findProductPromotion(productName: String): String? {
         return products.firstOrNull { product ->
             product[0] == productName
-        }?.get(3)
+        }?.get(3)?.takeIf { it.isNotEmpty() }
     }
 
     fun findPromotionStock(productName: String): Int {

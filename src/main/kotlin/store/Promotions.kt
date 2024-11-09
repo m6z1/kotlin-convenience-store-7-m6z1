@@ -36,16 +36,15 @@ class Promotions {
     }
 
     private fun findPromotion(promotionName: String): List<String> {
-        return promotions.find { promotion -> promotion[PROMOTION_NAME_INDEX] == promotionName }
-            ?: throw IllegalArgumentException("[ERROR] 해당 프로모션 이름을 가진 프로모션은 존재하지 않습니다.")
+        return promotions.first { promotion -> promotion[PROMOTION_NAME_INDEX] == promotionName }
     }
 
     fun checkPromotion(product: Map<String, Int>): PromotionState {
         val productName = product.keys.first()
         val productCountToPurchase = product.values.first()
-        val promotionName = productsManager.findProductPromotion(productName = productName)
+        val promotionName = productsManager.findProductPromotion(productName = productName)?.takeIf { it.isNotEmpty() } ?: return PromotionState.NONE
         val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
-        val promotion = findPromotion(promotionName ?: return PromotionState.NONE)
+        val promotion = findPromotion(promotionName)
 
         if (promotionStock < (productCountToPurchase / promotion[PROMOTION_BUY_COUNT_INDEX].toInt()) + productCountToPurchase) {
             return PromotionState.NOT_ENOUGH_STOCK
