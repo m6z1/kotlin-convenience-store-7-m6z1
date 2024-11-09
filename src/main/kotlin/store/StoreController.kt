@@ -1,6 +1,7 @@
 package store
 
 import camp.nextstep.edu.missionutils.DateTimes.now
+import store.membership.MembershipState
 import store.products.ProductsManager
 import store.promotion.PromotionState
 import store.promotion.Promotions
@@ -34,10 +35,20 @@ class StoreController(
         productsToPurchase.forEach { product ->
             val promotionState = promotions.checkPromotion(product)
             when (promotionState) {
-                PromotionState.NONE -> Unit
+                PromotionState.NONE -> checkMembership()
                 PromotionState.NOT_ENOUGH_STOCK -> Unit
                 PromotionState.ELIGIBLE_BENEFIT -> Unit
                 PromotionState.AVAILABLE_BENEFIT -> Unit
+            }
+        }
+    }
+
+    private fun checkMembership() {
+        while (true) {
+            try {
+                val membershipState = MembershipState.from(inputView.readMembershipState())
+            } catch (e: IllegalArgumentException) {
+                println(e.message)
             }
         }
     }

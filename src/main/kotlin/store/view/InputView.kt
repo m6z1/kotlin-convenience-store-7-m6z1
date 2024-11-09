@@ -14,4 +14,9 @@ class InputView {
             mapOf(name to quantity.toInt())
         }
     }
+
+    fun readMembershipState(): String {
+        println("멤버십 할인을 받으시겠습니까? (Y/N)")
+        return Console.readLine()
+    }
 }
