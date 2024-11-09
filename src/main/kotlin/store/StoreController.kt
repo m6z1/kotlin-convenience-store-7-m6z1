@@ -62,6 +62,7 @@ class StoreController(
             try {
                 val membershipState = MembershipState.from(inputView.readMembershipState())
                 val membershipDiscount = Membership(membershipState).calculateDiscount(price)
+                receipt.addMembershipDiscount(membershipDiscount)
                 break
             } catch (e: IllegalArgumentException) {
                 println(e.message)

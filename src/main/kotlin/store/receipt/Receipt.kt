@@ -6,6 +6,9 @@ class Receipt {
 
     fun addPurchasedProduct(product: PurchasedProduct) {
         purchasedProducts.add(product)
-        println(purchasedProducts)
+    }
+
+    fun addMembershipDiscount(price: Int) {
+        membershipDiscount += price
     }
 }
