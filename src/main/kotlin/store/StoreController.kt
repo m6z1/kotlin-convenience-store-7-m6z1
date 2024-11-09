@@ -49,7 +49,30 @@ class StoreController(
                     checkMembership(productsManager.findProductPrice(product.keys.first()) * product.values.first())
                 }
 
-                PromotionState.NOT_ENOUGH_STOCK -> Unit
+                PromotionState.NOT_ENOUGH_STOCK -> {
+                    if (checkRegularPriceToPay(
+                            product.keys.first(),
+                            promotions.findInsufficientPromotionQuantity(product),
+                        )
+                    ) {
+                        receipt.addPurchasedProduct(
+                            PurchasedProduct(
+                                product.keys.first(),
+                                product.values.first() - promotions.findInsufficientPromotionQuantity(product),
+                                productsManager.findProductPrice(product.keys.first()),
+                            )
+                        )
+                        return@forEach
+                    }
+                    receipt.addPurchasedProduct(
+                        PurchasedProduct(
+                            product.keys.first(),
+                            product.values.first(),
+                            productsManager.findProductPrice(product.keys.first()),
+                        )
+                    )
+                }
+
                 PromotionState.ELIGIBLE_BENEFIT -> {
                     if (checkFreebie(product.keys.first())) {
                         receipt.addPurchasedProduct(
@@ -80,6 +103,18 @@ class StoreController(
             try {
                 val addingFreebieState = ResponseState.from(inputView.readAddingFreebie(productName))
                 return promotions.isAddingFreebie(addingFreebieState)
+            } catch (e: IllegalArgumentException) {
+                println(e.message)
+            }
+        }
+    }
+
+    private fun checkRegularPriceToPay(productName: String, regularPriceToPayCount: Int): Boolean {
+        while (true) {
+            try {
+                val regularPriceToPayState =
+                    ResponseState.from(inputView.readRegularPriceToPay(productName, regularPriceToPayCount))
+                return promotions.isRegularPriceToPay(regularPriceToPayState)
             } catch (e: IllegalArgumentException) {
                 println(e.message)
             }

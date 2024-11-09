@@ -60,8 +60,26 @@ class Promotions {
         return PromotionState.AVAILABLE_BENEFIT
     }
 
+    fun findInsufficientPromotionQuantity(product: Map<String, Int>): Int {
+        val productName = product.keys.first()
+        val productCountToPurchase = product.values.first()
+        val promotionName =
+            productsManager.findProductPromotion(productName = productName)?.takeIf { it.isNotEmpty() } ?: ""
+        val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
+        val promotion = findPromotion(promotionName)
+
+        return productCountToPurchase - (promotionStock / promotion[PROMOTION_BUY_COUNT_INDEX].toInt() + promotion[PROMOTION_GET_COUNT_INDEX].toInt())
+    }
+
     fun isAddingFreebie(addingFreebieState: ResponseState): Boolean {
         return when (addingFreebieState) {
+            ResponseState.POSITIVE -> true
+            ResponseState.NEGATIVE -> false
+        }
+    }
+
+    fun isRegularPriceToPay(regularPriceToPayState: ResponseState): Boolean {
+        return when (regularPriceToPayState) {
             ResponseState.POSITIVE -> true
             ResponseState.NEGATIVE -> false
         }
