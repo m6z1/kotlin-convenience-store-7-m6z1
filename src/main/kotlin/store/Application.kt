@@ -1,5 +1,10 @@
 package store
 
 fun main() {
-    // TODO: 프로그램 구현
+    val inputView = InputView()
+    val outputView = OutputView()
+    val productsManager = ProductsManager()
+    val promotions = Promotions()
+    val storeController = StoreController(inputView, outputView, productsManager, promotions)
+    storeController.start()
 }
