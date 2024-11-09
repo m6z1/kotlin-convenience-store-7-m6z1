@@ -2,7 +2,7 @@ package store
 
 import camp.nextstep.edu.missionutils.DateTimes.now
 import store.membership.Membership
-import store.membership.MembershipState
+import State.MembershipState
 import store.products.ProductsManager
 import store.promotion.PromotionState
 import store.promotion.Promotions
@@ -56,11 +56,10 @@ class StoreController(
             }
         }
     }
-
     private fun checkMembership(price: Int) {
         while (true) {
             try {
-                val membershipState = MembershipState.from(inputView.readMembershipState())
+                val membershipState = ResponseState.from(inputView.readMembershipState())
                 val membershipDiscount = Membership(membershipState).calculateDiscount(price)
                 receipt.addMembershipDiscount(membershipDiscount)
                 break

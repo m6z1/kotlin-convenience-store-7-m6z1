@@ -7,14 +7,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import store.membership.Membership
-import store.membership.MembershipState
 
 class MembershipTest {
 
     @Nested
     @DisplayName("멤버십 적용된 테스트")
     inner class ApplicationMembership {
-        private val membership = Membership(MembershipState.APPLICATION)
+        private val membership = Membership(ResponseState.POSITIVE)
 
         @Test
         fun `상품의 구매 금액이 10,000원일 경우 할인 금액은 3,000원이다`() {
@@ -52,7 +51,7 @@ class MembershipTest {
         price: Int,
         expectedDiscount: Int,
     ) {
-        val membership = Membership(MembershipState.NOT_APPLICATION)
+        val membership = Membership(ResponseState.NEGATIVE)
 
         val discount = membership.calculateDiscount(price)
 

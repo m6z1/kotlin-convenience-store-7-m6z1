@@ -1,13 +1,14 @@
 package store.membership
 
+import store.ResponseState
 import kotlin.math.roundToInt
 
-class Membership(private val membershipState: MembershipState) {
+class Membership(private val membershipState: ResponseState) {
 
     fun calculateDiscount(price: Int): Int {
         return when (membershipState) {
-            MembershipState.APPLICATION -> calculate(price)
-            MembershipState.NOT_APPLICATION -> 0
+            ResponseState.POSITIVE -> calculate(price)
+            ResponseState.NEGATIVE -> 0
         }
     }
 
