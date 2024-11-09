@@ -68,7 +68,11 @@ class Promotions {
         val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
         val promotion = findPromotion(promotionName)
 
-        return productCountToPurchase - (promotionStock / promotion[PROMOTION_BUY_COUNT_INDEX].toInt() + promotion[PROMOTION_GET_COUNT_INDEX].toInt())
+        val promotionSetSize = promotion[PROMOTION_BUY_COUNT_INDEX].toInt() + promotion[PROMOTION_GET_COUNT_INDEX].toInt()
+        val maxPromotionCount = promotionStock / promotionSetSize
+        val maxPromotionQuantity = maxPromotionCount * promotionSetSize
+
+        return productCountToPurchase - maxPromotionQuantity
     }
 
     fun isAddingFreebie(addingFreebieState: ResponseState): Boolean {
@@ -83,6 +87,26 @@ class Promotions {
             ResponseState.POSITIVE -> true
             ResponseState.NEGATIVE -> false
         }
+    }
+
+    fun findFreebieCount(productToPurchase: Map<String, Int>): Int {
+        val productName = productToPurchase.keys.first()
+        val productCountToPurchase = productToPurchase.values.first()
+
+        val promotionName =
+            productsManager.findProductPromotion(productName = productName)?.takeIf { it.isNotEmpty() } ?: ""
+        val promotionStock = productsManager.findPromotionStock(productName = productName)
+        val promotion = findPromotion(promotionName)
+
+        val buyCount = promotion[PROMOTION_BUY_COUNT_INDEX].toInt()
+        val getCount = promotion[PROMOTION_GET_COUNT_INDEX].toInt()
+        val promotionSetSize = buyCount + getCount
+
+        val maxSetsByPurchase = productCountToPurchase / buyCount
+        val maxSetsByStock = promotionStock / promotionSetSize
+        val applicableSets = minOf(maxSetsByPurchase, maxSetsByStock)
+
+        return applicableSets * getCount
     }
 
     companion object {

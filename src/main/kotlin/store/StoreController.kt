@@ -46,7 +46,6 @@ class StoreController(
                             productsManager.findProductPrice(product.keys.first()),
                         )
                     )
-                    checkMembership(productsManager.findProductPrice(product.keys.first()) * product.values.first())
                 }
 
                 PromotionState.NOT_ENOUGH_STOCK -> {
@@ -62,6 +61,11 @@ class StoreController(
                                 productsManager.findProductPrice(product.keys.first()),
                             )
                         )
+                        receipt.addPromotionProduct(
+                            mapOf(
+                                product.keys.first() to promotions.findFreebieCount(product)
+                            )
+                        )
                         return@forEach
                     }
                     receipt.addPurchasedProduct(
@@ -69,6 +73,11 @@ class StoreController(
                             product.keys.first(),
                             product.values.first(),
                             productsManager.findProductPrice(product.keys.first()),
+                        )
+                    )
+                    receipt.addPromotionProduct(
+                        mapOf(
+                            product.keys.first() to promotions.findFreebieCount(product)
                         )
                     )
                 }
@@ -82,6 +91,11 @@ class StoreController(
                                 productsManager.findProductPrice(product.keys.first()),
                             )
                         )
+                        receipt.addPromotionProduct(
+                            mapOf(
+                                product.keys.first() to promotions.findFreebieCount(product)
+                            )
+                        )
                         return@forEach
                     }
                     receipt.addPurchasedProduct(
@@ -91,11 +105,32 @@ class StoreController(
                             productsManager.findProductPrice(product.keys.first()),
                         )
                     )
+                    receipt.addPromotionProduct(
+                        mapOf(
+                            product.keys.first() to promotions.findFreebieCount(product)
+                        )
+                    )
                 }
 
-                PromotionState.AVAILABLE_BENEFIT -> Unit
+                PromotionState.AVAILABLE_BENEFIT -> {
+                    receipt.addPurchasedProduct(
+                        PurchasedProduct(
+                            product.keys.first(),
+                            product.values.first(),
+                            productsManager.findProductPrice(product.keys.first()),
+                        )
+                    )
+                    receipt.addPromotionProduct(
+                        mapOf(
+                            product.keys.first() to promotions.findFreebieCount(product)
+                        )
+                    )
+                }
             }
         }
+
+        checkMembership(receipt.calculateNotContainingFreebie())
+        showReceipt()
     }
 
     private fun checkFreebie(productName: String): Boolean {
@@ -125,12 +160,24 @@ class StoreController(
         while (true) {
             try {
                 val membershipState = ResponseState.from(inputView.readMembershipState())
-                val membershipDiscount = Membership(membershipState).calculateDiscount(price)
+                val membershipDiscount =
+                    Membership(membershipState).calculateDiscount(receipt.calculateNotContainingFreebie())
                 receipt.addMembershipDiscount(membershipDiscount)
                 break
             } catch (e: IllegalArgumentException) {
                 println(e.message)
             }
         }
+    }
+
+    private fun showReceipt() {
+        outputView.printReceipt(
+            purchasedProducts = receipt.purchasedProducts,
+            freebies = receipt.promotions,
+            totalAmount = receipt.calculateTotalAmount(),
+            promotionDiscount = receipt.calculateFreebiesPrice(),
+            membershipDiscount = receipt.membershipDiscount,
+            amountDue = receipt.calculateAmountDue(),
+        )
     }
 }
