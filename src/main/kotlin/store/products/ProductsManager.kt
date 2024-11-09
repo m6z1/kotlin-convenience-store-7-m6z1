@@ -79,4 +79,10 @@ class ProductsManager {
         } ?: throw IllegalArgumentException("[ERROR] 존재하지 않는 상품입니다.")
         return promotionProduct[2].toIntOrNull() ?: 0
     }
+
+    fun findProductPrice(productName: String): Int {
+        return products.first { product ->
+            product[0] == productName
+        }[1].toInt()
+    }
 }
