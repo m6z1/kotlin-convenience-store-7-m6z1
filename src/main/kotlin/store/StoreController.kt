@@ -185,12 +185,18 @@ class StoreController(
             try {
                 val morePurchaseState = ResponseState.from(inputView.readMorePurchase())
                 when (morePurchaseState) {
-                    ResponseState.POSITIVE -> start()
-                    ResponseState.NEGATIVE -> return
+                    ResponseState.POSITIVE -> restart()
+                    ResponseState.NEGATIVE -> break
                 }
             } catch (e: IllegalArgumentException) {
                 println(e.message)
             }
         }
+    }
+
+    private fun restart() {
+        productsManager.updateLatestProduct(receipt.purchasedProducts)
+        receipt.reset()
+        start()
     }
 }

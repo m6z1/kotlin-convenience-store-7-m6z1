@@ -47,4 +47,10 @@ class Receipt {
     fun calculateAmountDue(): Int {
         return calculateTotalAmount() - calculateFreebiesPrice() - membershipDiscount
     }
+
+    fun reset() {
+        _purchasedProducts.clear()
+        _promotions.clear()
+        membershipDiscount = 0
+    }
 }
