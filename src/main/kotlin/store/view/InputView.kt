@@ -7,6 +7,10 @@ class InputView {
     fun readProductsToPurchase(): List<Map<String, Int>> {
         println("구매하실 상품명과 수량을 입력해 주세요. (예: [사이다-2],[감자칩-1])")
         val inputLines = Console.readLine().split(",")
+        inputLines.forEach { inputLine ->
+            require(inputLine.first() == '[' && inputLine.last() == ']') { "[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요." }
+        }
+
         return inputLines.map { inputLine ->
             val product = inputLine.replace("[", "").replace("]", "")
             val (name, quantity) = product.split("-")
