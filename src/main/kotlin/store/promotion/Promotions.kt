@@ -52,13 +52,13 @@ class Promotions {
         val promotionName = productsManager.findProductPromotion(productName = productName)?.takeIf { it != "null" }
             ?: return PromotionState.NONE
         val promotion = findPromotion(promotionName)
-
         val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
-        if (promotionStock < (productCountToPurchase / promotion.countOfBuy) + productCountToPurchase) {
+
+        if (productCountToPurchase % (promotion.countOfBuy + promotion.countOfGet) != 0) {
             return PromotionState.NOT_ENOUGH_STOCK
         }
 
-        if (productCountToPurchase % (promotion.countOfBuy + promotion.countOfGet) == promotion.countOfBuy) {
+        if (productCountToPurchase / (promotion.countOfBuy + promotion.countOfGet) + productCountToPurchase < promotionStock && productCountToPurchase % (promotion.countOfBuy + promotion.countOfGet) == promotion.countOfBuy) {
             return PromotionState.ELIGIBLE_BENEFIT
         }
 
@@ -68,13 +68,11 @@ class Promotions {
     fun findInsufficientPromotionQuantity(product: Map<String, Int>): Int {
         val productName = product.keys.first()
         val productCountToPurchase = product.values.first()
-        val promotionName =
-            productsManager.findProductPromotion(productName = productName)?.takeIf { it.isNotEmpty() } ?: ""
-        val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
+        val promotionName = productsManager.findProductPromotion(productName = productName) ?: ""
+        val promotionStock = productsManager.findPromotionStock(productName = productName)
         val promotion = findPromotion(promotionName)
 
-        val promotionSetSize =
-            promotion.countOfBuy + promotion.countOfGet
+        val promotionSetSize = promotion.countOfBuy + promotion.countOfGet
         val maxPromotionCount = promotionStock / promotionSetSize
         val maxPromotionQuantity = maxPromotionCount * promotionSetSize
 

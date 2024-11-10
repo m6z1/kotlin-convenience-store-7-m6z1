@@ -23,15 +23,10 @@ class StoreController(
         outputView.printWelcomeMessage()
         outputView.printProducts(productsManager.products)
 
-        while (true) {
-            try {
-                productsToPurchase = inputView.readProductsToPurchase()
-                productsManager.validPossiblePurchase(productsToPurchase)
-                break
-            } catch (e: IllegalArgumentException) {
-                println(e.message)
-            }
-        }
+        productsToPurchase = retryInput(
+            inputValue = { inputView.readProductsToPurchase() },
+            validationInputValue = { productsManager.validPossiblePurchase(it) }
+        )
 
         val today = now().toLocalDate()
         productsToPurchase.forEach { product ->
@@ -60,10 +55,11 @@ class StoreController(
                             promotions.findInsufficientPromotionQuantity(product),
                         )
                     ) {
+
                         receipt.addPurchasedProduct(
                             PurchasedProduct(
                                 product.keys.first(),
-                                product.values.first() - promotions.findInsufficientPromotionQuantity(product),
+                                product.values.first(),
                                 productsManager.findProductPrice(product.keys.first()),
                             )
                         )
@@ -77,7 +73,7 @@ class StoreController(
                     receipt.addPurchasedProduct(
                         PurchasedProduct(
                             product.keys.first(),
-                            product.values.first(),
+                            product.values.first() - promotions.findInsufficientPromotionQuantity(product),
                             productsManager.findProductPrice(product.keys.first()),
                         )
                     )
@@ -138,6 +134,18 @@ class StoreController(
         checkMembership()
         showReceipt()
         checkMorePurchase()
+    }
+
+    private fun <T> retryInput(inputValue: () -> T, validationInputValue: (T) -> Unit): T {
+        while (true) {
+            try {
+                val input = inputValue()
+                validationInputValue(input)
+                return input
+            } catch (e: IllegalArgumentException) {
+                println(e.message)
+            }
+        }
     }
 
     private fun checkFreebie(productName: String): Boolean {
