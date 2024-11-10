@@ -32,7 +32,8 @@ class OutputView {
         println("===========W 편의점=============")
         println("상품명\t\t수량\t금액")
         purchasedProducts.forEach { product ->
-            println("${product.name}\t\t${product.count}\t${product.price * product.count}")
+            val formattedPrice = THOUSAND_COMMA.format(product.price * product.count)
+            println("${product.name}\t\t${product.count}\t$formattedPrice")
         }
         if (freebies?.isNotEmpty() == true) {
             println("===========증\t정=============")
@@ -41,10 +42,16 @@ class OutputView {
             }
         }
         println("==============================")
-        println("총구매액\t\t${purchasedProducts.sumOf { it.count }}\t$totalAmount")
-        println("행사할인\t\t\t-${promotionDiscount}")
-        println("멤버십할인\t\t\t-${membershipDiscount}")
-        println("내실돈\t\t\t$amountDue")
+        println(
+            "총구매액\t\t${THOUSAND_COMMA.format(purchasedProducts.sumOf { it.count })}\t${
+                THOUSAND_COMMA.format(
+                    totalAmount
+                )
+            }"
+        )
+        println("행사할인\t\t\t-${THOUSAND_COMMA.format(promotionDiscount)}")
+        println("멤버십할인\t\t\t-${THOUSAND_COMMA.format(membershipDiscount)}")
+        println("내실돈\t\t\t${THOUSAND_COMMA.format(amountDue)}")
     }
 
     companion object {
