@@ -131,6 +131,7 @@ class StoreController(
 
         checkMembership(receipt.calculateNotContainingFreebie())
         showReceipt()
+        checkMorePurchase()
     }
 
     private fun checkFreebie(productName: String): Boolean {
@@ -179,5 +180,19 @@ class StoreController(
             membershipDiscount = receipt.membershipDiscount,
             amountDue = receipt.calculateAmountDue(),
         )
+    }
+
+    private fun checkMorePurchase() {
+        while (true) {
+            try {
+                val morePurchaseState = ResponseState.from(inputView.readMorePurchase())
+                when (morePurchaseState) {
+                    ResponseState.POSITIVE -> start()
+                    ResponseState.NEGATIVE -> return
+                }
+            } catch (e: IllegalArgumentException) {
+                println(e.message)
+            }
+        }
     }
 }
