@@ -39,15 +39,9 @@ class Receipt {
     }
 
     fun calculateNotContainingFreebie(): Int {
-        val regularProduct: MutableList<PurchasedProduct> = mutableListOf()
-
-        _purchasedProducts.filter { product ->
+        return _purchasedProducts.filter { product ->
             _promotions.none { promotion -> promotion.containsKey(product.name) }
-        }.forEach { product ->
-            regularProduct.add(product)
-        }
-
-        return regularProduct.sumOf { (it.price) * it.count }
+        }.sumOf { it.price * it.count }
     }
 
     fun calculateAmountDue(): Int {
