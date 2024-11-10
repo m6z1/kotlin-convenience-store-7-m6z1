@@ -9,7 +9,6 @@ import store.receipt.PurchasedProduct
 import store.receipt.Receipt
 import store.view.InputView
 import store.view.OutputView
-import java.time.LocalDate
 
 class StoreController(
     private val inputView: InputView,
@@ -26,12 +25,11 @@ class StoreController(
         val productsToPurchase = inputView.readProductsToPurchase()
         productsManager.validPossiblePurchase(productsToPurchase)
 
-        val today = now()
-        val formattedToday = LocalDate.of(today.year, today.month, today.dayOfMonth)
+        val today = now().toLocalDate()
         productsToPurchase.forEach { product ->
             promotions.isPossiblePromotionDiscount(
                 promotionName = product.keys.first(),
-                today = formattedToday,
+                today = today,
             )
         }
 
@@ -129,7 +127,7 @@ class StoreController(
             }
         }
 
-        checkMembership(receipt.calculateNotContainingFreebie())
+        checkMembership()
         showReceipt()
         checkMorePurchase()
     }
@@ -157,7 +155,7 @@ class StoreController(
         }
     }
 
-    private fun checkMembership(price: Int) {
+    private fun checkMembership() {
         while (true) {
             try {
                 val membershipState = ResponseState.from(inputView.readMembershipState())

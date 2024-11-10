@@ -1,5 +1,6 @@
 package store.products
 
+import store.receipt.PurchasedProduct
 import java.io.File
 
 class ProductsManager {
@@ -23,10 +24,7 @@ class ProductsManager {
 
     private fun readProductsFile(): List<String> {
         val path = "src/main/resources/products.md"
-        val productsLine = emptyList<String>().toMutableList()
-        File(path).forEachLine { productsLine.add(it) }
-
-        return productsLine
+        return File(path).useLines { it.toList() }
     }
 
     private fun formatNullToBlank() {
@@ -84,5 +82,15 @@ class ProductsManager {
         return products.first { product ->
             product[0] == productName
         }[1].toInt()
+    }
+
+    fun updateLatestProduct(purchasedProduct: List<PurchasedProduct>) {
+        purchasedProduct.forEach { purchasedProduct ->
+            _products.forEach { product ->
+                if (purchasedProduct.name == product[0]) {
+                    product[2] = (product[2].toInt() - purchasedProduct.count).toString()
+                }
+            }
+        }
     }
 }
