@@ -49,19 +49,26 @@ class Promotions {
     fun checkPromotion(product: Map<String, Int>): PromotionState {
         val productName = product.keys.first()
         val productCountToPurchase = product.values.first()
+
         val promotionName = productsManager.findProductPromotion(productName = productName)?.takeIf { it != "null" }
             ?: return PromotionState.NONE
         val promotion = findPromotion(promotionName)
-        val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
+        val promotionStock = productsManager.findPromotionStock(productName)
 
-        if (productCountToPurchase % (promotion.countOfBuy + promotion.countOfGet) != 0) {
+        val totalProductCount =
+            productCountToPurchase + (productCountToPurchase / promotion.countOfBuy) * promotion.countOfGet
+
+        if (totalProductCount > promotionStock) {
             return PromotionState.NOT_ENOUGH_STOCK
         }
 
-        if (productCountToPurchase / (promotion.countOfBuy + promotion.countOfGet) + productCountToPurchase < promotionStock && productCountToPurchase % (promotion.countOfBuy + promotion.countOfGet) == promotion.countOfBuy) {
+        if (promotion.countOfBuy == 1 && productCountToPurchase % 2 != 0) {
             return PromotionState.ELIGIBLE_BENEFIT
         }
 
+        if (promotion.countOfBuy == 2 && productCountToPurchase % 2 == 0) {
+            return PromotionState.ELIGIBLE_BENEFIT
+        }
         return PromotionState.AVAILABLE_BENEFIT
     }
 
