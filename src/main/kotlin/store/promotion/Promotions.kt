@@ -49,11 +49,11 @@ class Promotions {
     fun checkPromotion(product: Map<String, Int>): PromotionState {
         val productName = product.keys.first()
         val productCountToPurchase = product.values.first()
-        val promotionName = productsManager.findProductPromotion(productName = productName)?.takeIf { it.isNotEmpty() }
+        val promotionName = productsManager.findProductPromotion(productName = productName)?.takeIf { it != "null" }
             ?: return PromotionState.NONE
-        val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
         val promotion = findPromotion(promotionName)
 
+        val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
         if (promotionStock < (productCountToPurchase / promotion.countOfBuy) + productCountToPurchase) {
             return PromotionState.NOT_ENOUGH_STOCK
         }
