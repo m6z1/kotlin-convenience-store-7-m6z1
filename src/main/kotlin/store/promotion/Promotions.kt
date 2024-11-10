@@ -55,8 +55,11 @@ class Promotions {
         val promotion = findPromotion(promotionName)
         val promotionStock = productsManager.findPromotionStock(productName)
 
-        val totalProductCount =
-            productCountToPurchase + (productCountToPurchase / promotion.countOfBuy) * promotion.countOfGet
+        val totalProductCount = if (promotion.countOfBuy == 1) {
+            productCountToPurchase + (productCountToPurchase / 2)
+        } else {
+            productCountToPurchase + (productCountToPurchase / 2)
+        }
 
         if (totalProductCount > promotionStock) {
             return PromotionState.NOT_ENOUGH_STOCK
