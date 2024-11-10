@@ -17,13 +17,21 @@ class StoreController(
     private val promotions: Promotions,
 ) {
     private val receipt = Receipt()
+    private lateinit var productsToPurchase: List<Map<String, Int>>
 
     fun start() {
         outputView.printWelcomeMessage()
         outputView.printProducts(productsManager.products)
 
-        val productsToPurchase = inputView.readProductsToPurchase()
-        productsManager.validPossiblePurchase(productsToPurchase)
+        while (true) {
+            try {
+                productsToPurchase = inputView.readProductsToPurchase()
+                productsManager.validPossiblePurchase(productsToPurchase)
+                break
+            } catch (e: IllegalArgumentException) {
+                println(e.message)
+            }
+        }
 
         val today = now().toLocalDate()
         productsToPurchase.forEach { product ->
