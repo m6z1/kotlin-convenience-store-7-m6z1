@@ -4,21 +4,25 @@ import store.receipt.PurchasedProduct
 import java.io.File
 
 class ProductsManager {
-    private val _products: MutableList<MutableList<String>> = mutableListOf()
-    val products: List<List<String>> get() = _products
+    private val _products: MutableList<Product> = mutableListOf()
+    val products: List<Product> get() = _products
 
     init {
         updateProducts()
     }
 
     private fun updateProducts() {
-        val productsLine = readProductsFile()
-        val productsLineExceptTitle = productsLine.filter { it != productsLine[0] }
-        productsLineExceptTitle.forEach { product ->
-            _products.add(product.split(",").toMutableList())
+        val productsLine = readProductsFile().drop(1)
+        productsLine.forEach { productLine ->
+            val productData = productLine.split(",")
+            val product = Product(
+                name = productData[0],
+                price = productData[1].toInt(),
+                quantity = productData[2].toInt(),
+                promotion = productData[3],
+            )
+            _products.add(product)
         }
-
-        formatNullToBlank()
         addOutOfProductNonePromotion()
     }
 
@@ -27,28 +31,22 @@ class ProductsManager {
         return File(path).useLines { it.toList() }
     }
 
-    private fun formatNullToBlank() {
-        _products.forEach { product ->
-            if (product[3] == "null") {
-                product[3] = ""
-            }
-        }
-    }
-
     private fun addOutOfProductNonePromotion() {
-        val sameProductCounts = _products.groupBy { it[0] }.mapValues { it.value.size }
-        val updateProducts = mutableListOf<MutableList<String>>()
+        val sameProductCounts = _products.groupBy { it.name }.mapValues { it.value.size }
+        val updateProducts = mutableListOf<Product>()
 
-        for (product in _products) {
-            val productName = product[0]
-            if (sameProductCounts[productName] == 1 && product[3] != "") {
+        products.forEach { product ->
+            if (sameProductCounts.size == 1 && product.promotion != "null") {
                 updateProducts.add(product)
-                updateProducts.add(mutableListOf(product[0], product[1], "재고 없음"))
+                updateProducts.add(
+                    Product(
+                        product.name, product.price, 0, "null"
+                    )
+                )
             } else {
                 updateProducts.add(product)
             }
         }
-
         _products.clear()
         _products.addAll(updateProducts)
     }
@@ -57,40 +55,35 @@ class ProductsManager {
         productsToPurchase.forEach { product ->
             val productName = product.keys.first()
             val quantityToPurchase = product.values.first()
-            val matchingProducts = _products.filter { it[0] == productName }
+            val matchingProducts = _products.filter { it.name == productName }
             require(matchingProducts.isNotEmpty()) { "[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요." }
 
-            val purchasableQuantity = matchingProducts.sumOf { it[2].toIntOrNull() ?: 0 }
+            val purchasableQuantity = matchingProducts.sumOf { it.price }
             require(purchasableQuantity >= quantityToPurchase) { "[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요." }
         }
     }
 
     fun findProductPromotion(productName: String): String? {
-        return products.firstOrNull { product ->
-            product[0] == productName
-        }?.get(3)?.takeIf { it.isNotEmpty() }
+        return products.firstOrNull { it.name == productName }?.promotion?.takeIf { it.isNotEmpty() }
     }
 
     fun findPromotionStock(productName: String): Int {
-        val promotionProduct = products.firstOrNull { product ->
-            product[0] == productName && product[2].isNotBlank()
-        } ?: throw IllegalArgumentException("[ERROR] 존재하지 않는 상품입니다.")
-        return promotionProduct[2].toIntOrNull() ?: 0
+        val promotionProduct = products.firstOrNull { it.name == productName && it.promotion != "null" }
+            ?: throw IllegalArgumentException("[ERROR] 프로모션 재고가 없습니다.")
+        return promotionProduct.quantity
     }
 
     fun findProductPrice(productName: String): Int {
-        return products.first { product ->
-            product[0] == productName
-        }[1].toInt()
+        return products.first { it.name == productName }.price
     }
 
-    fun updateLatestProduct(purchasedProduct: List<PurchasedProduct>) {
-        purchasedProduct.forEach { purchasedProduct ->
-            _products.forEach { product ->
-                if (purchasedProduct.name == product[0]) {
-                    product[2] = (product[2].toInt() - purchasedProduct.count).toString()
-                }
-            }
+    fun updateLatestProduct(purchasedProduct: PurchasedProduct, isPromotionPeriod: Boolean) {
+        if (isPromotionPeriod) {
+            products.find { product -> product.name == purchasedProduct.name }?.quantity?.minus(purchasedProduct.count)
+            return
         }
+        products.find { product -> product.name == purchasedProduct.name && product.promotion == "null" }?.quantity?.minus(
+            purchasedProduct.count
+        )
     }
 }

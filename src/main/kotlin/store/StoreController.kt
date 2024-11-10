@@ -203,7 +203,6 @@ class StoreController(
     }
 
     private fun restart() {
-        productsManager.updateLatestProduct(receipt.purchasedProducts)
         receipt.reset()
         start()
     }

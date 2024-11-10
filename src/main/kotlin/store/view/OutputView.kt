@@ -1,5 +1,6 @@
 package store.view
 
+import store.products.Product
 import store.receipt.PurchasedProduct
 import java.text.DecimalFormat
 
@@ -10,13 +11,14 @@ class OutputView {
         println("현재 보유하고 있는 상품입니다.\n")
     }
 
-    fun printProducts(products: List<List<String>>) {
+    fun printProducts(products: List<Product>) {
         products.forEach { product ->
-            if (product[2] == "재고 없음") {
-                println("- ${product[0]} ${THOUSAND_COMMA.format(product[1].toInt())}원 재고 없음")
+            val promotion = if (product.promotion == "null") "" else product.promotion
+            if (product.quantity == 0) {
+                println("- ${product.name} ${THOUSAND_COMMA.format(product.price)}원 재고 없음 $promotion")
                 return@forEach
             }
-            println("- ${product[0]} ${THOUSAND_COMMA.format(product[1].toInt())}원 ${product[2].toInt()}개 ${product[3]}")
+            println("- ${product.name} ${THOUSAND_COMMA.format(product.price)}원 ${product.quantity}개 $promotion")
         }
         println()
     }
