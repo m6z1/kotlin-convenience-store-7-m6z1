@@ -1,20 +1,21 @@
 package store.promotion
 
 import store.ResponseState
+import store.fileReader.FileReader
 import store.products.ProductsManager
-import java.io.File
 import java.time.LocalDate
 
 class Promotions {
     private val promotions: MutableList<Promotion> = mutableListOf()
     private val productsManager = ProductsManager()
+    private val fileReader = FileReader(PROMOTIONS_PATH)
 
     init {
         updatePromotions()
     }
 
     private fun updatePromotions() {
-        val promotions = readPromotionsFile().drop(1)
+        val promotions = fileReader.readFile().drop(1)
         promotions.forEach { promotion ->
             val promotionData = promotion.split(",")
             val promotion = Promotion(
@@ -26,14 +27,6 @@ class Promotions {
             )
             this.promotions.add(promotion)
         }
-    }
-
-    private fun readPromotionsFile(): List<String> {
-        val path = "src/main/resources/promotions.md"
-        val productsLine = emptyList<String>().toMutableList()
-        File(path).forEachLine { productsLine.add(it) }
-
-        return productsLine
     }
 
     fun isPossiblePromotionDiscount(productName: String, today: LocalDate): Boolean {
@@ -119,6 +112,7 @@ class Promotions {
     }
 
     companion object {
+        private const val PROMOTIONS_PATH = "src/main/resources/promotions.md"
         private const val PROMOTION_NAME_INDEX = 0
         private const val PROMOTION_BUY_COUNT_INDEX = 1
         private const val PROMOTION_GET_COUNT_INDEX = 2

@@ -1,18 +1,20 @@
 package store.products
 
+import store.fileReader.FileReader
 import store.receipt.PurchasedProduct
-import java.io.File
 
 class ProductsManager {
     private val _products: MutableList<Product> = mutableListOf()
     val products: List<Product> get() = _products
+
+    private val fileReader = FileReader(PRODUCTS_PATH)
 
     init {
         updateProducts()
     }
 
     private fun updateProducts() {
-        val productsLine = readProductsFile().drop(1)
+        val productsLine = fileReader.readFile().drop(1)
         productsLine.forEach { productLine ->
             val productData = productLine.split(",")
             val product = Product(
@@ -24,11 +26,6 @@ class ProductsManager {
             _products.add(product)
         }
         addOutOfProductNonePromotion()
-    }
-
-    private fun readProductsFile(): List<String> {
-        val path = "src/main/resources/products.md"
-        return File(path).useLines { it.toList() }
     }
 
     private fun addOutOfProductNonePromotion() {
@@ -78,12 +75,20 @@ class ProductsManager {
     }
 
     fun updateLatestProduct(purchasedProduct: PurchasedProduct, isPromotionPeriod: Boolean) {
-        if (isPromotionPeriod) {
-            products.find { product -> product.name == purchasedProduct.name }?.quantity?.minus(purchasedProduct.count)
-            return
+        _products.forEachIndexed { index, product ->
+            if (isPromotionPeriod && product.name == purchasedProduct.name && product.promotion != "null") {
+                _products[index] = product.copy(quantity = product.quantity - purchasedProduct.count)
+                return@forEachIndexed
+            }
+
+            if (!isPromotionPeriod && product.name == purchasedProduct.name && product.promotion == "null") {
+                _products[index] = product.copy(quantity = product.quantity - purchasedProduct.count)
+                return@forEachIndexed
+            }
         }
-        products.find { product -> product.name == purchasedProduct.name && product.promotion == "null" }?.quantity?.minus(
-            purchasedProduct.count
-        )
+    }
+
+    companion object {
+        private const val PRODUCTS_PATH = "src/main/resources/products.md"
     }
 }
