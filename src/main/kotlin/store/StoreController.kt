@@ -22,130 +22,112 @@ class StoreController(
     fun start() {
         outputView.printWelcomeMessage()
         outputView.printProducts(productsManager.products)
-
-        productsToPurchase = retryInput(
-            inputValue = { inputView.readProductsToPurchase() },
-            validationInputValue = { productsManager.validPossiblePurchase(it) }
-        )
-
-        val today = now().toLocalDate()
+        productsToPurchase = getValidatedProductsToPurchase()
         productsToPurchase.forEach { product ->
-            promotions.isPossiblePromotionDiscount(
-                promotionName = product.keys.first(),
-                today = today,
-            )
-        }
-
-        productsToPurchase.forEach { product ->
-            val promotionState = promotions.checkPromotion(product)
-            when (promotionState) {
-                PromotionState.NONE -> {
-                    receipt.addPurchasedProduct(
-                        PurchasedProduct(
-                            product.keys.first(),
-                            product.values.first(),
-                            productsManager.findProductPrice(product.keys.first()),
-                        )
-                    )
-                }
-
-                PromotionState.NOT_ENOUGH_STOCK -> {
-                    if (checkRegularPriceToPay(
-                            product.keys.first(),
-                            promotions.findInsufficientPromotionQuantity(product),
-                        )
-                    ) {
-
-                        receipt.addPurchasedProduct(
-                            PurchasedProduct(
-                                product.keys.first(),
-                                product.values.first(),
-                                productsManager.findProductPrice(product.keys.first()),
-                            )
-                        )
-                        receipt.addPromotionProduct(
-                            mapOf(
-                                product.keys.first() to promotions.findFreebieCount(product)
-                            )
-                        )
-                        return@forEach
-                    }
-                    receipt.addPurchasedProduct(
-                        PurchasedProduct(
-                            product.keys.first(),
-                            product.values.first() - promotions.findInsufficientPromotionQuantity(product),
-                            productsManager.findProductPrice(product.keys.first()),
-                        )
-                    )
-                    receipt.addPromotionProduct(
-                        mapOf(
-                            product.keys.first() to promotions.findFreebieCount(product)
-                        )
-                    )
-                }
-
-                PromotionState.ELIGIBLE_BENEFIT -> {
-                    if (checkFreebie(product.keys.first())) {
-                        receipt.addPurchasedProduct(
-                            PurchasedProduct(
-                                product.keys.first(),
-                                product.values.first() + 1,
-                                productsManager.findProductPrice(product.keys.first()),
-                            )
-                        )
-                        receipt.addPromotionProduct(
-                            mapOf(
-                                product.keys.first() to promotions.findFreebieCount(product)
-                            )
-                        )
-                        return@forEach
-                    }
-                    receipt.addPurchasedProduct(
-                        PurchasedProduct(
-                            product.keys.first(),
-                            product.values.first(),
-                            productsManager.findProductPrice(product.keys.first()),
-                        )
-                    )
-                    receipt.addPromotionProduct(
-                        mapOf(
-                            product.keys.first() to promotions.findFreebieCount(product)
-                        )
-                    )
-                }
-
-                PromotionState.AVAILABLE_BENEFIT -> {
-                    receipt.addPurchasedProduct(
-                        PurchasedProduct(
-                            product.keys.first(),
-                            product.values.first(),
-                            productsManager.findProductPrice(product.keys.first()),
-                        )
-                    )
-                    receipt.addPromotionProduct(
-                        mapOf(
-                            product.keys.first() to promotions.findFreebieCount(product)
-                        )
-                    )
-                }
+            if (isApplyingPromotion(product)) {
+                addProductsToReceipt(product)
+                return@forEach
             }
+            val purchasedProduct = PurchasedProduct(
+                name = product.keys.first(),
+                count = product.values.first(),
+                price = productsManager.findProductPrice(product.keys.first()),
+            )
+            receipt.addPurchasedProduct(
+                purchasedProduct
+            )
+            productsManager.updateLatestProduct(purchasedProduct = purchasedProduct, isPromotionPeriod = false)
         }
-
         checkMembership()
         showReceipt()
         checkMorePurchase()
     }
 
-    private fun <T> retryInput(inputValue: () -> T, validationInputValue: (T) -> Unit): T {
+
+    private fun getValidatedProductsToPurchase(): List<Map<String, Int>> {
         while (true) {
             try {
-                val input = inputValue()
-                validationInputValue(input)
-                return input
+                val products = inputView.readProductsToPurchase()
+                productsManager.validPossiblePurchase(products)
+                return products
             } catch (e: IllegalArgumentException) {
                 println(e.message)
             }
         }
+    }
+
+    private fun isApplyingPromotion(productToPurchase: Map<String, Int>): Boolean {
+        val today = now().toLocalDate()
+
+        return promotions.isPossiblePromotionDiscount(
+            productName = productToPurchase.keys.first().toString(),
+            today = today,
+        )
+    }
+
+    private fun addProductsToReceipt(productToPurchase: Map<String, Int>) {
+        val promotionState = promotions.checkPromotion(productToPurchase)
+
+        when (promotionState) {
+            PromotionState.NONE -> addRegularProductToReceipt(productToPurchase)
+            PromotionState.NOT_ENOUGH_STOCK -> addProductWithInsufficientStock(productToPurchase)
+            PromotionState.ELIGIBLE_BENEFIT -> addEligibleBenefitProductToReceipt(productToPurchase)
+            PromotionState.AVAILABLE_BENEFIT -> addAvailableBenefitProductToReceipt(productToPurchase)
+        }
+    }
+
+    private fun addRegularProductToReceipt(product: Map<String, Int>) {
+        val purchasedProduct = PurchasedProduct(
+            product.keys.first(), product.values.first(), productsManager.findProductPrice(product.keys.first())
+        )
+        receipt.addPurchasedProduct(purchasedProduct)
+        productsManager.updateLatestProduct(purchasedProduct, true)
+    }
+
+    private fun addProductWithInsufficientStock(product: Map<String, Int>) {
+        val productName = product.keys.first()
+        val productCountToPurchase = product.values.first()
+
+        if (checkRegularPriceToPay(productName, promotions.findInsufficientPromotionQuantity(product))) {
+            val purchasedProduct = PurchasedProduct(
+                productName, productCountToPurchase, productsManager.findProductPrice(productName)
+            )
+            receipt.addPurchasedProduct(purchasedProduct)
+            receipt.addPromotionProduct(mapOf(productName to promotions.findFreebieCount(product)))
+            productsManager.updateLatestProduct(purchasedProduct, true)
+            return
+        }
+        val purchasedProduct = PurchasedProduct(
+            productName,
+            productCountToPurchase - promotions.findInsufficientPromotionQuantity(product),
+            productsManager.findProductPrice(productName)
+        )
+        receipt.addPurchasedProduct(purchasedProduct)
+        receipt.addPromotionProduct(mapOf(productName to promotions.findFreebieCount(product)))
+        productsManager.updateLatestProduct(purchasedProduct, true)
+    }
+
+    private fun addEligibleBenefitProductToReceipt(product: Map<String, Int>) {
+        val productName = product.keys.first()
+        val productCountToPurchase = product.values.first()
+
+        if (checkFreebie(productName)) {
+            val purchasedProduct = PurchasedProduct(
+                productName,
+                productCountToPurchase + 1,
+                productsManager.findProductPrice(productName),
+            )
+            receipt.addPurchasedProduct(purchasedProduct)
+            productsManager.updateLatestProduct(purchasedProduct, true)
+            return
+        }
+        val purchasedProduct = PurchasedProduct(
+            productName, productCountToPurchase, productsManager.findProductPrice(productName)
+        )
+
+        receipt.addPurchasedProduct(purchasedProduct)
+        receipt.addPromotionProduct(mapOf(productName to promotions.findFreebieCount(product)))
+        productsManager.updateLatestProduct(purchasedProduct, true)
     }
 
     private fun checkFreebie(productName: String): Boolean {
@@ -169,6 +151,17 @@ class StoreController(
                 println(e.message)
             }
         }
+    }
+
+    private fun addAvailableBenefitProductToReceipt(product: Map<String, Int>) {
+        receipt.addPurchasedProduct(
+            PurchasedProduct(
+                product.keys.first(), product.values.first(), productsManager.findProductPrice(product.keys.first())
+            )
+        )
+        receipt.addPromotionProduct(
+            mapOf(product.keys.first() to promotions.findFreebieCount(product))
+        )
     }
 
     private fun checkMembership() {
