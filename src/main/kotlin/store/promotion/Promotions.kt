@@ -14,9 +14,9 @@ class Promotions {
     }
 
     private fun updatePromotions() {
-        val productsLine = readProductsFile().drop(1)
-        productsLine.forEach { productLine ->
-            val promotionData = productLine.split(",")
+        val promotions = readPromotionsFile().drop(1)
+        promotions.forEach { promotion ->
+            val promotionData = promotion.split(",")
             val promotion = Promotion(
                 name = promotionData[PROMOTION_NAME_INDEX],
                 countOfBuy = promotionData[PROMOTION_BUY_COUNT_INDEX].toInt(),
@@ -24,11 +24,11 @@ class Promotions {
                 startDate = LocalDate.parse(promotionData[PROMOTION_START_DATE_INDEX]),
                 endDate = LocalDate.parse(promotionData[PROMOTION_END_DATE_INDEX])
             )
-            promotions.add(promotion)
+            this.promotions.add(promotion)
         }
     }
 
-    private fun readProductsFile(): List<String> {
+    private fun readPromotionsFile(): List<String> {
         val path = "src/main/resources/promotions.md"
         val productsLine = emptyList<String>().toMutableList()
         File(path).forEachLine { productsLine.add(it) }
