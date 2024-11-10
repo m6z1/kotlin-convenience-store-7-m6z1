@@ -36,7 +36,7 @@ class ProductsManager {
         val updateProducts = mutableListOf<Product>()
 
         products.forEach { product ->
-            if (sameProductCounts.size == 1 && product.promotion != "null") {
+            if (sameProductCounts[product.name] == 1 && product.promotion != "null") {
                 updateProducts.add(product)
                 updateProducts.add(
                     Product(
