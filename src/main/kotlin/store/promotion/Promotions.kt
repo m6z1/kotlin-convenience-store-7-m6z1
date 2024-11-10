@@ -6,7 +6,7 @@ import java.io.File
 import java.time.LocalDate
 
 class Promotions {
-    private val promotions: MutableList<List<String>> = emptyList<List<String>>().toMutableList()
+    private val promotions: MutableList<Promotion> = mutableListOf()
     private val productsManager = ProductsManager()
 
     init {
@@ -14,10 +14,17 @@ class Promotions {
     }
 
     private fun updatePromotions() {
-        val productsLine = readProductsFile()
-        val productsLineExceptTitle = productsLine.filter { it != productsLine[0] }
-        productsLineExceptTitle.forEach { product ->
-            promotions.add(product.split(","))
+        val productsLine = readProductsFile().drop(1)
+        productsLine.forEach { productLine ->
+            val promotionData = productLine.split(",")
+            val promotion = Promotion(
+                name = promotionData[PROMOTION_NAME_INDEX],
+                countOfBuy = promotionData[PROMOTION_BUY_COUNT_INDEX].toInt(),
+                countOfGet = promotionData[PROMOTION_GET_COUNT_INDEX].toInt(),
+                startDate = LocalDate.parse(promotionData[PROMOTION_START_DATE_INDEX]),
+                endDate = LocalDate.parse(promotionData[PROMOTION_END_DATE_INDEX])
+            )
+            promotions.add(promotion)
         }
     }
 
@@ -30,15 +37,13 @@ class Promotions {
     }
 
     fun isPossiblePromotionDiscount(promotionName: String, today: LocalDate): Boolean {
-        val promotion = promotions.firstOrNull { it[PROMOTION_NAME_INDEX] == promotionName } ?: return false
+        val promotion = promotions.firstOrNull { it.name == promotionName } ?: return false
 
-        val startDate = LocalDate.parse(promotion[PROMOTION_START_DATE_INDEX])
-        val endDate = LocalDate.parse(promotion[PROMOTION_END_DATE_INDEX])
-        return today in startDate..endDate
+        return today in promotion.startDate..promotion.endDate
     }
 
-    private fun findPromotion(promotionName: String): List<String> {
-        return promotions.first { promotion -> promotion[PROMOTION_NAME_INDEX] == promotionName }
+    private fun findPromotion(promotionName: String): Promotion {
+        return promotions.first { promotion -> promotion.name == promotionName }
     }
 
     fun checkPromotion(product: Map<String, Int>): PromotionState {
@@ -49,11 +54,11 @@ class Promotions {
         val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
         val promotion = findPromotion(promotionName)
 
-        if (promotionStock < (productCountToPurchase / promotion[PROMOTION_BUY_COUNT_INDEX].toInt()) + productCountToPurchase) {
+        if (promotionStock < (productCountToPurchase / promotion.countOfBuy) + productCountToPurchase) {
             return PromotionState.NOT_ENOUGH_STOCK
         }
 
-        if (productCountToPurchase % (promotion[PROMOTION_BUY_COUNT_INDEX].toInt() + promotion[PROMOTION_GET_COUNT_INDEX].toInt()) == promotion[PROMOTION_BUY_COUNT_INDEX].toInt()) {
+        if (productCountToPurchase % (promotion.countOfBuy + promotion.countOfGet) == promotion.countOfBuy) {
             return PromotionState.ELIGIBLE_BENEFIT
         }
 
@@ -68,7 +73,8 @@ class Promotions {
         val promotionStock = productsManager.findPromotionStock(productName = product.keys.first())
         val promotion = findPromotion(promotionName)
 
-        val promotionSetSize = promotion[PROMOTION_BUY_COUNT_INDEX].toInt() + promotion[PROMOTION_GET_COUNT_INDEX].toInt()
+        val promotionSetSize =
+            promotion.countOfBuy + promotion.countOfGet
         val maxPromotionCount = promotionStock / promotionSetSize
         val maxPromotionQuantity = maxPromotionCount * promotionSetSize
 
@@ -98,22 +104,20 @@ class Promotions {
         val promotionStock = productsManager.findPromotionStock(productName = productName)
         val promotion = findPromotion(promotionName)
 
-        val buyCount = promotion[PROMOTION_BUY_COUNT_INDEX].toInt()
-        val getCount = promotion[PROMOTION_GET_COUNT_INDEX].toInt()
-        val promotionSetSize = buyCount + getCount
+        val promotionSetSize = promotion.countOfBuy + promotion.countOfGet
 
-        val maxSetsByPurchase = productCountToPurchase / buyCount
+        val maxSetsByPurchase = productCountToPurchase / promotion.countOfBuy
         val maxSetsByStock = promotionStock / promotionSetSize
         val applicableSets = minOf(maxSetsByPurchase, maxSetsByStock)
 
-        return applicableSets * getCount
+        return applicableSets * promotion.countOfGet
     }
 
     companion object {
-        const val PROMOTION_NAME_INDEX = 0
-        const val PROMOTION_BUY_COUNT_INDEX = 1
-        const val PROMOTION_GET_COUNT_INDEX = 2
-        const val PROMOTION_START_DATE_INDEX = 3
-        const val PROMOTION_END_DATE_INDEX = 4
+        private const val PROMOTION_NAME_INDEX = 0
+        private const val PROMOTION_BUY_COUNT_INDEX = 1
+        private const val PROMOTION_GET_COUNT_INDEX = 2
+        private const val PROMOTION_START_DATE_INDEX = 3
+        private const val PROMOTION_END_DATE_INDEX = 4
     }
 }
