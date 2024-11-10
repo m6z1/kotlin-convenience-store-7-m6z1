@@ -36,8 +36,12 @@ class Promotions {
         return productsLine
     }
 
-    fun isPossiblePromotionDiscount(promotionName: String, today: LocalDate): Boolean {
-        val promotion = promotions.firstOrNull { it.name == promotionName } ?: return false
+    fun isPossiblePromotionDiscount(productName: String, today: LocalDate): Boolean {
+        val promotion = promotions.firstOrNull { it.name == productsManager.findProductPromotion(productName) }
+
+        if (promotion == null) {
+            return false
+        }
 
         return today in promotion.startDate..promotion.endDate
     }
@@ -69,7 +73,7 @@ class Promotions {
             return PromotionState.ELIGIBLE_BENEFIT
         }
 
-        if (promotion.countOfBuy == 2 && productCountToPurchase % 2 == 0) {
+        if (promotion.countOfBuy == 2 && productCountToPurchase % 3 != 0) {
             return PromotionState.ELIGIBLE_BENEFIT
         }
         return PromotionState.AVAILABLE_BENEFIT
@@ -106,19 +110,12 @@ class Promotions {
     fun findFreebieCount(productToPurchase: Map<String, Int>): Int {
         val productName = productToPurchase.keys.first()
         val productCountToPurchase = productToPurchase.values.first()
-
         val promotionName =
             productsManager.findProductPromotion(productName = productName)?.takeIf { it.isNotEmpty() } ?: ""
-        val promotionStock = productsManager.findPromotionStock(productName = productName)
         val promotion = findPromotion(promotionName)
-
         val promotionSetSize = promotion.countOfBuy + promotion.countOfGet
 
-        val maxSetsByPurchase = productCountToPurchase / promotion.countOfBuy
-        val maxSetsByStock = promotionStock / promotionSetSize
-        val applicableSets = minOf(maxSetsByPurchase, maxSetsByStock)
-
-        return applicableSets * promotion.countOfGet
+        return productCountToPurchase / promotionSetSize
     }
 
     companion object {
