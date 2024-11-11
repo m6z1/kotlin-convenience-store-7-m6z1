@@ -52,7 +52,7 @@ class StoreController(
                 productsManager.validPossiblePurchase(products)
                 return products
             } catch (e: IllegalArgumentException) {
-                println(e.message)
+                outputView.printErrorMessage(e.message)
             }
         }
     }
@@ -138,7 +138,7 @@ class StoreController(
                 val addingFreebieState = ResponseState.from(inputView.readAddingFreebie())
                 return promotions.isAddingFreebie(addingFreebieState)
             } catch (e: IllegalArgumentException) {
-                println(e.message)
+                outputView.printErrorMessage(e.message)
             }
         }
     }
@@ -150,7 +150,7 @@ class StoreController(
                 val regularPriceToPayState = ResponseState.from(inputView.readRegularPriceToPay())
                 return promotions.isRegularPriceToPay(regularPriceToPayState)
             } catch (e: IllegalArgumentException) {
-                println(e.message)
+                outputView.printErrorMessage(e.message)
             }
         }
     }
@@ -176,7 +176,7 @@ class StoreController(
                 receipt.addMembershipDiscount(membershipDiscount)
                 break
             } catch (e: IllegalArgumentException) {
-                println(e.message)
+                outputView.printErrorMessage(e.message)
             }
         }
     }
