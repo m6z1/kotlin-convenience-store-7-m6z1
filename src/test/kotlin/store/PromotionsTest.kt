@@ -3,6 +3,7 @@ package store
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import store.products.Product
 import store.promotion.PromotionState
 import store.promotion.Promotions
 
@@ -11,21 +12,24 @@ class PromotionsTest {
 
     @ParameterizedTest
     @CsvSource(
-        "물, 1, NONE",
-        "비타민워터, 6, NONE",
-        "콜라, 10, NOT_ENOUGH_STOCK",
-        "오렌지주스, 1, ELIGIBLE_BENEFIT",
-        "사이다, 2, ELIGIBLE_BENEFIT",
-        "오렌지주스, 2, AVAILABLE_BENEFIT",
-        "사이다, 3, AVAILABLE_BENEFIT",
+        "물, 500, 1, null, NONE",
+        "비타민워터, 1500, 6, null, NONE",
+        "콜라, 1000, 10, 탄산2+1, NOT_ENOUGH_STOCK",
+        "오렌지주스, 1800, 1, MD추천상품, ELIGIBLE_BENEFIT",
+        "사이다, 1000, 2, 탄산2+1, ELIGIBLE_BENEFIT",
+        "오렌지주스, 1800, 2, MD추천상품, AVAILABLE_BENEFIT",
+        "사이다, 1000, 3, 탄산2+1, AVAILABLE_BENEFIT",
     )
     fun `상품명과 구매 개수를 입력 시 프로모션 상태를 반환한다`(
         productName: String,
-        count: Int,
+        productPrice: Int,
+        countToPurchase: Int,
+        productPromotion: String,
         expectedState: PromotionState,
     ) {
-        val product = mapOf(productName to count)
+        val product = Product(productName, productPrice, countToPurchase, productPromotion)
 
+        println(product)
         val result = promotions.checkPromotion(product)
 
         assertEquals(expectedState, result)
