@@ -1,9 +1,9 @@
 package store.promotion
 
-import store.utils.ResponseState
 import store.fileReader.FileReader
 import store.products.ProductsManager
 import store.products.ProductsManager.Companion.NONE_PROMOTION
+import store.utils.ResponseState
 import java.time.LocalDate
 
 class Promotions {
@@ -54,6 +54,7 @@ class Promotions {
         val totalProductCount = calculateTotalProductCount(promotion, productCountToPurchase)
 
         if (isNotEnoughStock(totalProductCount, promotionStock)) return PromotionState.NOT_ENOUGH_STOCK
+        if (promotionStock < (promotion.countOfBuy + promotion.countOfGet)) return PromotionState.NONE
         if (isEligibleOneBuyOneGetPromotion(promotion, productCountToPurchase)) return PromotionState.ELIGIBLE_BENEFIT
         if (isEligibleTwoBuyOneGetPromotion(promotion, productCountToPurchase)) return PromotionState.ELIGIBLE_BENEFIT
         return PromotionState.AVAILABLE_BENEFIT
