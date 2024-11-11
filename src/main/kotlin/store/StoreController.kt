@@ -120,8 +120,8 @@ class StoreController(
         )
         receipt.addPurchasedProduct(purchasedProduct)
         productsManager.updateLatestProduct(purchasedProduct, true)
-        if (promotions.findFreebieCount(product) == 0) return
-        receipt.addPromotionProduct(mapOf(productName to promotions.findFreebieCount(product)))
+        if (promotions.findFreebieCount(mapOf(purchasedProduct.name to purchasedProduct.count)) == 0) return
+        receipt.addPromotionProduct(mapOf(purchasedProduct.name to purchasedProduct.count))
     }
 
     private fun addProductWithInsufficientStock(product: Map<String, Int>) {
