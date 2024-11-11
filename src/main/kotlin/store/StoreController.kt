@@ -47,6 +47,7 @@ class StoreController(
     private fun getValidatedProductsToPurchase(): List<Map<String, Int>> {
         while (true) {
             try {
+                outputView.printProductsToPurchaseMessage()
                 val products = inputView.readProductsToPurchase()
                 productsManager.validPossiblePurchase(products)
                 return products
@@ -133,7 +134,8 @@ class StoreController(
     private fun checkFreebie(productName: String): Boolean {
         while (true) {
             try {
-                val addingFreebieState = ResponseState.from(inputView.readAddingFreebie(productName))
+                outputView.printAddingFreebieMessage(productName)
+                val addingFreebieState = ResponseState.from(inputView.readAddingFreebie())
                 return promotions.isAddingFreebie(addingFreebieState)
             } catch (e: IllegalArgumentException) {
                 println(e.message)
@@ -144,8 +146,8 @@ class StoreController(
     private fun checkRegularPriceToPay(productName: String, regularPriceToPayCount: Int): Boolean {
         while (true) {
             try {
-                val regularPriceToPayState =
-                    ResponseState.from(inputView.readRegularPriceToPay(productName, regularPriceToPayCount))
+                outputView.printRegularPriceToPayMessage(productName, regularPriceToPayCount)
+                val regularPriceToPayState = ResponseState.from(inputView.readRegularPriceToPay())
                 return promotions.isRegularPriceToPay(regularPriceToPayState)
             } catch (e: IllegalArgumentException) {
                 println(e.message)
@@ -167,6 +169,7 @@ class StoreController(
     private fun checkMembership() {
         while (true) {
             try {
+                outputView.printMembershipMessage()
                 val membershipState = ResponseState.from(inputView.readMembershipState())
                 val membershipDiscount =
                     Membership(membershipState).calculateDiscount(receipt.calculateNotContainingFreebie())
@@ -192,6 +195,7 @@ class StoreController(
     private fun checkMorePurchase() {
         while (true) {
             try {
+                outputView.printMorePurchaseMessage()
                 val morePurchaseState = ResponseState.from(inputView.readMorePurchase())
                 when (morePurchaseState) {
                     ResponseState.POSITIVE -> restart()

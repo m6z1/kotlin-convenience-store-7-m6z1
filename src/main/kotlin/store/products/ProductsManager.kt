@@ -14,38 +14,45 @@ class ProductsManager {
     }
 
     private fun updateProducts() {
-        val productsLine = fileReader.readFile().drop(1)
-        productsLine.forEach { productLine ->
-            val productData = productLine.split(",")
+        fileReader.readFile().drop(FILE_TITLE).forEach { productLine ->
+            val productData = productLine.split(FILE_DELIMITER)
             val product = Product(
-                name = productData[0],
-                price = productData[1].toInt(),
-                quantity = productData[2].toInt(),
-                promotion = productData[3],
+                name = productData[PRODUCT_NAME_INDEX],
+                price = productData[PRODUCT_PRICE_INDEX].toInt(),
+                quantity = productData[PRODUCT_QUANTITY_INDEX].toInt(),
+                promotion = productData[PRODUCT_PROMOTION_INDEX],
             )
             _products.add(product)
         }
-        addOutOfProductNonePromotion()
+        checkNonePromotionsProduct()
     }
 
-    private fun addOutOfProductNonePromotion() {
+    private fun checkNonePromotionsProduct() {
         val sameProductCounts = _products.groupBy { it.name }.mapValues { it.value.size }
         val updateProducts = mutableListOf<Product>()
 
         products.forEach { product ->
-            if (sameProductCounts[product.name] == 1 && product.promotion != "null") {
-                updateProducts.add(product)
-                updateProducts.add(
-                    Product(
-                        product.name, product.price, 0, "null"
-                    )
-                )
-            } else {
-                updateProducts.add(product)
-            }
+            addNonePromotionProduct(sameProductCounts, product, updateProducts)
         }
         _products.clear()
         _products.addAll(updateProducts)
+    }
+
+    private fun addNonePromotionProduct(
+        sameProductCounts: Map<String, Int>,
+        product: Product,
+        updateProducts: MutableList<Product>
+    ) {
+        if (sameProductCounts[product.name] == STANDARD_ADDING_NONE_PROMOTION_PRODUCT && product.promotion != NONE_PROMOTION) {
+            updateProducts.add(product)
+            updateProducts.add(
+                Product(
+                    product.name, product.price, INITIAL_QUANTITY, NONE_PROMOTION
+                )
+            )
+        } else {
+            updateProducts.add(product)
+        }
     }
 
     fun validPossiblePurchase(productsToPurchase: List<Map<String, Int>>) {
@@ -65,7 +72,7 @@ class ProductsManager {
     }
 
     fun findPromotionStock(productName: String): Int {
-        val promotionProduct = products.firstOrNull { it.name == productName && it.promotion != "null" }
+        val promotionProduct = products.firstOrNull { it.name == productName && it.promotion != NONE_PROMOTION }
             ?: throw IllegalArgumentException("[ERROR] 프로모션 재고가 없습니다.")
         return promotionProduct.quantity
     }
@@ -76,12 +83,12 @@ class ProductsManager {
 
     fun updateLatestProduct(purchasedProduct: PurchasedProduct, isPromotionPeriod: Boolean) {
         _products.forEachIndexed { index, product ->
-            if (isPromotionPeriod && product.name == purchasedProduct.name && product.promotion != "null") {
+            if (isPromotionPeriod && product.name == purchasedProduct.name && product.promotion != NONE_PROMOTION) {
                 _products[index] = product.copy(quantity = product.quantity - purchasedProduct.count)
                 return@forEachIndexed
             }
 
-            if (!isPromotionPeriod && product.name == purchasedProduct.name && product.promotion == "null") {
+            if (!isPromotionPeriod && product.name == purchasedProduct.name && product.promotion == NONE_PROMOTION) {
                 _products[index] = product.copy(quantity = product.quantity - purchasedProduct.count)
                 return@forEachIndexed
             }
@@ -90,5 +97,14 @@ class ProductsManager {
 
     companion object {
         private const val PRODUCTS_PATH = "src/main/resources/products.md"
+        private const val FILE_TITLE = 1
+        private const val FILE_DELIMITER = ","
+        private const val PRODUCT_NAME_INDEX = 0
+        private const val PRODUCT_PRICE_INDEX = 1
+        private const val PRODUCT_QUANTITY_INDEX = 2
+        private const val PRODUCT_PROMOTION_INDEX = 3
+        private const val STANDARD_ADDING_NONE_PROMOTION_PRODUCT = 1
+        const val INITIAL_QUANTITY = 0
+        const val NONE_PROMOTION = "null"
     }
 }

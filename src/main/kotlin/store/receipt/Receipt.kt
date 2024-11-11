@@ -3,9 +3,11 @@ package store.receipt
 class Receipt {
     private val _purchasedProducts: MutableList<PurchasedProduct> = mutableListOf()
     val purchasedProducts: List<PurchasedProduct> get() = _purchasedProducts
+
     private val _promotions: MutableList<Map<String, Int>> = mutableListOf()
     val promotions: List<Map<String, Int>> get() = _promotions
-    var membershipDiscount = 0
+
+    var membershipDiscount = ZERO
         private set
 
     fun addPurchasedProduct(product: PurchasedProduct) {
@@ -25,8 +27,7 @@ class Receipt {
     }
 
     fun calculateFreebiesPrice(): Int {
-        var totalFreebiePrice = 0
-
+        var totalFreebiePrice = ZERO
         promotions.forEach { promotion ->
             purchasedProducts.forEach { product ->
                 if (promotion.containsKey(product.name)) {
@@ -51,6 +52,10 @@ class Receipt {
     fun reset() {
         _purchasedProducts.clear()
         _promotions.clear()
-        membershipDiscount = 0
+        membershipDiscount = ZERO
+    }
+
+    companion object {
+        private const val ZERO = 0
     }
 }
