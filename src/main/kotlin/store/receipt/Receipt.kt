@@ -30,13 +30,23 @@ class Receipt {
         var totalFreebiePrice = ZERO
         promotions.forEach { promotion ->
             purchasedProducts.forEach { product ->
-                if (promotion.containsKey(product.name)) {
-                    totalFreebiePrice += product.price * promotion.values.first()
-                }
+                totalFreebiePrice = addFreebiesPrice(promotion, product, totalFreebiePrice)
             }
         }
 
         return totalFreebiePrice
+    }
+
+    private fun addFreebiesPrice(
+        promotion: Map<String, Int>,
+        product: PurchasedProduct,
+        totalFreebiePrice: Int
+    ): Int {
+        var totalPrice = totalFreebiePrice
+        if (promotion.containsKey(product.name)) {
+            totalPrice += product.price * promotion.values.first()
+        }
+        return totalPrice
     }
 
     fun calculateNotContainingFreebie(): Int {
