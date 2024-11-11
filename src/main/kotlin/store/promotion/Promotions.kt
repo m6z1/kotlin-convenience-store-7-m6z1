@@ -1,8 +1,8 @@
 package store.promotion
 
 import store.fileReader.FileReader
+import store.products.Product
 import store.products.ProductsManager
-import store.products.ProductsManager.Companion.NONE_PROMOTION
 import store.utils.ResponseState
 import java.time.LocalDate
 
@@ -39,24 +39,19 @@ class Promotions {
         return today in promotion.startDate..promotion.endDate
     }
 
-    private fun findPromotion(promotionName: String): Promotion {
-        return promotions.first { promotion -> promotion.name == promotionName }
+    private fun findPromotion(promotionName: String): Promotion? {
+        return promotions.firstOrNull { promotion -> promotion.name == promotionName }
     }
 
-    fun checkPromotion(product: Map<String, Int>): PromotionState {
-        val productName = product.keys.first()
-        val productCountToPurchase = product.values.first()
-        val promotionName =
-            productsManager.findProductPromotion(productName = productName)?.takeIf { it != NONE_PROMOTION }
-                ?: return PromotionState.NONE
-        val promotion = findPromotion(promotionName)
-        val promotionStock = productsManager.findPromotionStock(productName)
-        val totalProductCount = calculateTotalProductCount(promotion, productCountToPurchase)
+    fun checkPromotion(product: Product): PromotionState {
+        val promotion = findPromotion(product.promotion) ?: return PromotionState.NONE
+        val promotionStock = productsManager.findPromotionStock(product.name)
+        val totalProductCount = calculateTotalProductCount(promotion, product.quantity)
 
         if (isNotEnoughStock(totalProductCount, promotionStock)) return PromotionState.NOT_ENOUGH_STOCK
         if (promotionStock < (promotion.countOfBuy + promotion.countOfGet)) return PromotionState.NONE
-        if (isEligibleOneBuyOneGetPromotion(promotion, productCountToPurchase)) return PromotionState.ELIGIBLE_BENEFIT
-        if (isEligibleTwoBuyOneGetPromotion(promotion, productCountToPurchase)) return PromotionState.ELIGIBLE_BENEFIT
+        if (isEligibleOneBuyOneGetPromotion(promotion, product.quantity)) return PromotionState.ELIGIBLE_BENEFIT
+        if (isEligibleTwoBuyOneGetPromotion(promotion, product.quantity)) return PromotionState.ELIGIBLE_BENEFIT
         return PromotionState.AVAILABLE_BENEFIT
     }
 
@@ -82,10 +77,10 @@ class Promotions {
     fun findInsufficientPromotionQuantity(product: Map<String, Int>): Int {
         val productName = product.keys.first()
         val productCountToPurchase = product.values.first()
-        val promotionName = productsManager.findProductPromotion(productName = productName) ?: ""
+        val promotionName = productsManager.findProductPromotion(productName = productName)
         val promotionStock = productsManager.findPromotionStock(productName = productName)
         val promotion = findPromotion(promotionName)
-        val promotionSetSize = promotion.countOfBuy + promotion.countOfGet
+        val promotionSetSize = promotion!!.countOfBuy + promotion.countOfGet
         val maxPromotionCount = promotionStock / promotionSetSize
         val maxPromotionQuantity = maxPromotionCount * promotionSetSize
 
@@ -110,9 +105,9 @@ class Promotions {
         val productName = productToPurchase.keys.first()
         val productCountToPurchase = productToPurchase.values.first()
         val promotionName =
-            productsManager.findProductPromotion(productName = productName)?.takeIf { it.isNotEmpty() } ?: ""
+            productsManager.findProductPromotion(productName = productName).takeIf { it.isNotEmpty() } ?: ""
         val promotion = findPromotion(promotionName)
-        val promotionSetSize = promotion.countOfBuy + promotion.countOfGet
+        val promotionSetSize = promotion!!.countOfBuy + promotion.countOfGet
 
         return productCountToPurchase / promotionSetSize
     }
@@ -126,6 +121,5 @@ class Promotions {
         private const val PROMOTION_GET_COUNT_INDEX = 2
         private const val PROMOTION_START_DATE_INDEX = 3
         private const val PROMOTION_END_DATE_INDEX = 4
-        private const val ONE_PLUS_ONE_PROMOTION_BUY_COUNT = 1
     }
 }

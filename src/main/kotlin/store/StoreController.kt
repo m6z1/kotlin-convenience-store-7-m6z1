@@ -2,6 +2,7 @@ package store
 
 import camp.nextstep.edu.missionutils.DateTimes.now
 import store.membership.Membership
+import store.products.Product
 import store.products.ProductsManager
 import store.promotion.PromotionState
 import store.promotion.Promotions
@@ -25,30 +26,36 @@ class StoreController(
         outputView.printProducts(productsManager.products)
         productsToPurchase = getValidatedProductsToPurchase()
         productsToPurchase.forEach { product ->
-            if (isApplyingPromotion(product)) {
-                addProductsToReceipt(product)
-                return@forEach
-            }
-            val purchasedProduct = PurchasedProduct(
-                name = product.keys.first(),
-                count = product.values.first(),
-                price = productsManager.findProductPrice(product.keys.first()),
-            )
-            receipt.addPurchasedProduct(
-                purchasedProduct
-            )
-            productsManager.updateLatestProduct(purchasedProduct = purchasedProduct, isPromotionPeriod = false)
+            checkApplyingPromotionToProduct(product)
         }
         checkMembership()
         showReceipt()
         checkMorePurchase()
     }
 
+    private fun checkApplyingPromotionToProduct(product: Map<String, Int>) {
+        if (isApplyingPromotion(product)) {
+            addProductsToReceipt(product)
+            return
+        }
+        addRegularProduct(product)
+    }
+
+    private fun addRegularProduct(product: Map<String, Int>) {
+        val purchasedProduct = PurchasedProduct(
+            name = product.keys.first(),
+            count = product.values.first(),
+            price = productsManager.findProductPrice(product.keys.first()),
+        )
+        receipt.addPurchasedProduct(
+            product = purchasedProduct,
+        )
+        productsManager.updateLatestProduct(purchasedProduct = purchasedProduct, isPromotionPeriod = false)
+    }
 
     private fun getValidatedProductsToPurchase(): List<Map<String, Int>> {
         while (true) {
             try {
-                outputView.printProductsToPurchaseMessage()
                 val products = inputView.readProductsToPurchase()
                 productsManager.validPossiblePurchase(products)
                 return products
@@ -68,8 +75,21 @@ class StoreController(
     }
 
     private fun addProductsToReceipt(productToPurchase: Map<String, Int>) {
-        val promotionState = promotions.checkPromotion(productToPurchase)
+        val productName = productToPurchase.keys.first()
+        val product = Product(
+            name = productToPurchase.keys.first(),
+            price = productsManager.findProductPrice(productName),
+            quantity = productToPurchase.values.first(),
+            promotion = productsManager.findProductPromotion(productName)
+        )
+        val promotionState = promotions.checkPromotion(product)
+        divideFromPromotionState(promotionState, productToPurchase)
+    }
 
+    private fun divideFromPromotionState(
+        promotionState: PromotionState,
+        productToPurchase: Map<String, Int>
+    ) {
         when (promotionState) {
             PromotionState.NONE -> addRegularProductToReceipt(productToPurchase)
             PromotionState.NOT_ENOUGH_STOCK -> addProductWithInsufficientStock(productToPurchase)
@@ -80,33 +100,55 @@ class StoreController(
 
     private fun addRegularProductToReceipt(product: Map<String, Int>) {
         val purchasedProduct = PurchasedProduct(
-            product.keys.first(), product.values.first(), productsManager.findProductPrice(product.keys.first())
+            name = product.keys.first(),
+            count = product.values.first(),
+            price = productsManager.findProductPrice(product.keys.first()),
         )
         receipt.addPurchasedProduct(purchasedProduct)
         productsManager.updateLatestProduct(purchasedProduct, true)
     }
 
+    private fun addPromotionProductToReceipt(
+        productName: String,
+        productCountToPurchase: Int,
+        product: Map<String, Int>
+    ) {
+        val purchasedProduct = PurchasedProduct(
+            name = productName,
+            count = productCountToPurchase,
+            price = productsManager.findProductPrice(productName),
+        )
+        receipt.addPurchasedProduct(purchasedProduct)
+        productsManager.updateLatestProduct(purchasedProduct, true)
+        if (promotions.findFreebieCount(product) == 0) return
+        receipt.addPromotionProduct(mapOf(productName to promotions.findFreebieCount(product)))
+    }
+
     private fun addProductWithInsufficientStock(product: Map<String, Int>) {
         val productName = product.keys.first()
         val productCountToPurchase = product.values.first()
-
         if (checkRegularPriceToPay(productName, promotions.findInsufficientPromotionQuantity(product))) {
-            val purchasedProduct = PurchasedProduct(
-                productName, productCountToPurchase, productsManager.findProductPrice(productName)
-            )
-            receipt.addPurchasedProduct(purchasedProduct)
-            receipt.addPromotionProduct(mapOf(productName to promotions.findFreebieCount(product)))
-            productsManager.updateLatestProduct(purchasedProduct, true)
+            val updatedProduct = mapOf(productName to productCountToPurchase + 1)
+            addPromotionProductToReceipt(productName, productCountToPurchase, updatedProduct)
             return
         }
-        val purchasedProduct = PurchasedProduct(
+        addPromotionProductToReceipt(
             productName,
             productCountToPurchase - promotions.findInsufficientPromotionQuantity(product),
-            productsManager.findProductPrice(productName)
+            product,
         )
-        receipt.addPurchasedProduct(purchasedProduct)
-        receipt.addPromotionProduct(mapOf(productName to promotions.findFreebieCount(product)))
-        productsManager.updateLatestProduct(purchasedProduct, true)
+    }
+
+    private fun checkRegularPriceToPay(productName: String, regularPriceToPayCount: Int): Boolean {
+        while (true) {
+            try {
+                val regularPriceToPayState =
+                    ResponseState.from(inputView.readRegularPriceToPay(productName, regularPriceToPayCount))
+                return promotions.isRegularPriceToPay(regularPriceToPayState)
+            } catch (e: IllegalArgumentException) {
+                outputView.printErrorMessage(e.message)
+            }
+        }
     }
 
     private fun addEligibleBenefitProductToReceipt(product: Map<String, Int>) {
@@ -114,42 +156,17 @@ class StoreController(
         val productCountToPurchase = product.values.first()
 
         if (checkFreebie(productName)) {
-            val purchasedProduct = PurchasedProduct(
-                productName,
-                productCountToPurchase + 1,
-                productsManager.findProductPrice(productName),
-            )
-            receipt.addPurchasedProduct(purchasedProduct)
-            productsManager.updateLatestProduct(purchasedProduct, true)
+            addPromotionProductToReceipt(productName, productCountToPurchase + 1, product)
             return
         }
-        val purchasedProduct = PurchasedProduct(
-            productName, productCountToPurchase, productsManager.findProductPrice(productName)
-        )
-
-        receipt.addPurchasedProduct(purchasedProduct)
-        receipt.addPromotionProduct(mapOf(productName to promotions.findFreebieCount(product)))
-        productsManager.updateLatestProduct(purchasedProduct, true)
+        addPromotionProductToReceipt(productName, productCountToPurchase, product)
     }
 
     private fun checkFreebie(productName: String): Boolean {
         while (true) {
             try {
-                outputView.printAddingFreebieMessage(productName)
-                val addingFreebieState = ResponseState.from(inputView.readAddingFreebie())
+                val addingFreebieState = ResponseState.from(inputView.readAddingFreebie(productName))
                 return promotions.isAddingFreebie(addingFreebieState)
-            } catch (e: IllegalArgumentException) {
-                outputView.printErrorMessage(e.message)
-            }
-        }
-    }
-
-    private fun checkRegularPriceToPay(productName: String, regularPriceToPayCount: Int): Boolean {
-        while (true) {
-            try {
-                outputView.printRegularPriceToPayMessage(productName, regularPriceToPayCount)
-                val regularPriceToPayState = ResponseState.from(inputView.readRegularPriceToPay())
-                return promotions.isRegularPriceToPay(regularPriceToPayState)
             } catch (e: IllegalArgumentException) {
                 outputView.printErrorMessage(e.message)
             }
@@ -159,7 +176,9 @@ class StoreController(
     private fun addAvailableBenefitProductToReceipt(product: Map<String, Int>) {
         receipt.addPurchasedProduct(
             PurchasedProduct(
-                product.keys.first(), product.values.first(), productsManager.findProductPrice(product.keys.first())
+                name = product.keys.first(),
+                count = product.values.first(),
+                price = productsManager.findProductPrice(product.keys.first()),
             )
         )
         receipt.addPromotionProduct(
@@ -170,7 +189,6 @@ class StoreController(
     private fun checkMembership() {
         while (true) {
             try {
-                outputView.printMembershipMessage()
                 val membershipState = ResponseState.from(inputView.readMembershipState())
                 val membershipDiscount =
                     Membership(membershipState).calculateDiscount(receipt.calculateNotContainingFreebie())
@@ -196,7 +214,6 @@ class StoreController(
     private fun checkMorePurchase() {
         while (true) {
             try {
-                outputView.printMorePurchaseMessage()
                 val morePurchaseState = ResponseState.from(inputView.readMorePurchase())
                 when (morePurchaseState) {
                     ResponseState.POSITIVE -> restart()

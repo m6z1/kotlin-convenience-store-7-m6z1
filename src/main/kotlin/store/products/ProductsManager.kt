@@ -67,8 +67,8 @@ class ProductsManager {
         }
     }
 
-    fun findProductPromotion(productName: String): String? {
-        return products.firstOrNull { it.name == productName }?.promotion?.takeIf { it.isNotEmpty() }
+    fun findProductPromotion(productName: String): String {
+        return products.firstOrNull { it.name == productName }?.promotion?.takeIf { it.isNotEmpty() } ?: ""
     }
 
     fun findPromotionStock(productName: String): Int {
