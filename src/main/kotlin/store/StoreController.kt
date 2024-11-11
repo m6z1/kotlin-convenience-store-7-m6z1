@@ -111,7 +111,6 @@ class StoreController(
     private fun addPromotionProductToReceipt(
         productName: String,
         productCountToPurchase: Int,
-        product: Map<String, Int>
     ) {
         val purchasedProduct = PurchasedProduct(
             name = productName,
@@ -120,23 +119,49 @@ class StoreController(
         )
         receipt.addPurchasedProduct(purchasedProduct)
         productsManager.updateLatestProduct(purchasedProduct, true)
-        if (promotions.findFreebieCount(mapOf(purchasedProduct.name to purchasedProduct.count)) == 0) return
-        receipt.addPromotionProduct(mapOf(purchasedProduct.name to purchasedProduct.count))
+        val freebieCount = promotions.findFreebieCount(mapOf(purchasedProduct.name to purchasedProduct.count))
+        if (freebieCount == 0) return
+        receipt.addPromotionProduct(mapOf(productName to freebieCount))
     }
 
     private fun addProductWithInsufficientStock(product: Map<String, Int>) {
         val productName = product.keys.first()
         val productCountToPurchase = product.values.first()
         if (checkRegularPriceToPay(productName, promotions.findInsufficientPromotionQuantity(product))) {
-            val updatedProduct = mapOf(productName to productCountToPurchase + 1)
-            addPromotionProductToReceipt(productName, productCountToPurchase, updatedProduct)
+            addProductWithInsufficientToReceipt(productName, productCountToPurchase, product)
             return
         }
         addPromotionProductToReceipt(
             productName,
             productCountToPurchase - promotions.findInsufficientPromotionQuantity(product),
-            product,
         )
+    }
+
+    private fun addProductWithInsufficientToReceipt(
+        productName: String,
+        productCountToPurchase: Int,
+        product: Map<String, Int>
+    ) {
+        val purchasedProduct = createPurchasedProduct(productName, productCountToPurchase)
+        val promotionProductCount = purchasedProduct.count - promotions.findInsufficientPromotionQuantity(product)
+        val freebieCount = promotions.findFreebieCount(
+            mapOf(purchasedProduct.name to promotionProductCount)
+        )
+        receipt.addPurchasedProduct(purchasedProduct)
+        productsManager.updateLatestProduct(purchasedProduct, true)
+        receipt.addPromotionProduct(mapOf(productName to freebieCount))
+    }
+
+    private fun createPurchasedProduct(
+        productName: String,
+        productCountToPurchase: Int
+    ): PurchasedProduct {
+        val purchasedProduct = PurchasedProduct(
+            name = productName,
+            count = productCountToPurchase,
+            price = productsManager.findProductPrice(productName),
+        )
+        return purchasedProduct
     }
 
     private fun checkRegularPriceToPay(productName: String, regularPriceToPayCount: Int): Boolean {
@@ -156,10 +181,10 @@ class StoreController(
         val productCountToPurchase = product.values.first()
 
         if (checkFreebie(productName)) {
-            addPromotionProductToReceipt(productName, productCountToPurchase + 1, product)
+            addPromotionProductToReceipt(productName, productCountToPurchase + 1)
             return
         }
-        addPromotionProductToReceipt(productName, productCountToPurchase, product)
+        addPromotionProductToReceipt(productName, productCountToPurchase)
     }
 
     private fun checkFreebie(productName: String): Boolean {
