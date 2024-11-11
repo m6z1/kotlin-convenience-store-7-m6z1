@@ -13,7 +13,6 @@ class InputView {
             val product = formatProductToPurchase(inputLine)
             val (name, quantity) = product.split(DASH_DELIMITER)
             validateProductToPurchase(quantity)
-
             mapOf(name to quantity.toInt())
         }
     }
@@ -21,7 +20,7 @@ class InputView {
     private fun validateInputLine(inputLine: String) {
         require(inputLine.first() == START_FORM_OF_PRODUCT_TO_PURCHASE && inputLine.last() == END_FORM_OF_PRODUCT_TO_PURCHASE) { "[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요." }
         require(inputLine.isNotBlank()) { "[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요." }
-        require(inputLine.contains(" ").not()) { "[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요." }
+        require(inputLine.contains(BLANK).not()) { "[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요." }
     }
 
     private fun formatProductToPurchase(inputLine: String): String {
@@ -62,5 +61,6 @@ class InputView {
         private const val START_FORM_OF_PRODUCT_TO_PURCHASE = '['
         private const val END_FORM_OF_PRODUCT_TO_PURCHASE = ']'
         private const val EMPTY_VALUE = ""
+        private const val BLANK = " "
     }
 }
