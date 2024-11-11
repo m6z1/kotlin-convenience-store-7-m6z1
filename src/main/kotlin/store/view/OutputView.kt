@@ -52,6 +52,10 @@ class OutputView {
     private fun printPurchasedProducts(purchasedProducts: List<PurchasedProduct>) {
         purchasedProducts.forEach { product ->
             val formattedPrice = THOUSAND_COMMA.format(product.price * product.count)
+            if (product.name.length == SHORT_NAME_LENGTH) {
+                println("${product.name}\t\t\t${product.count}\t$formattedPrice")
+                return@forEach
+            }
             println("${product.name}\t\t${product.count}\t$formattedPrice")
         }
     }
@@ -80,5 +84,6 @@ class OutputView {
 
     companion object {
         private val THOUSAND_COMMA = DecimalFormat("#,###")
+        private const val SHORT_NAME_LENGTH = 1
     }
 }
