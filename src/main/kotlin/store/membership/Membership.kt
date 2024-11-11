@@ -1,6 +1,6 @@
 package store.membership
 
-import store.ResponseState
+import store.utils.ResponseState
 import kotlin.math.roundToInt
 
 class Membership(private val membershipState: ResponseState) {

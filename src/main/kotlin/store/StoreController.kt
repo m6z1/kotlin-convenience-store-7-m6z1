@@ -7,6 +7,7 @@ import store.promotion.PromotionState
 import store.promotion.Promotions
 import store.receipt.PurchasedProduct
 import store.receipt.Receipt
+import store.utils.ResponseState
 import store.view.InputView
 import store.view.OutputView
 

@@ -1,6 +1,6 @@
 package store.promotion
 
-import store.ResponseState
+import store.utils.ResponseState
 import store.fileReader.FileReader
 import store.products.ProductsManager
 import store.products.ProductsManager.Companion.NONE_PROMOTION

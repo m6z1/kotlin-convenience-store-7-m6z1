@@ -1,4 +1,4 @@
-package store
+package store.utils
 
 enum class ResponseState(private val message: String) {
     POSITIVE("Y"),
