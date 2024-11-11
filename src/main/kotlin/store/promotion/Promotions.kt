@@ -55,23 +55,25 @@ class Promotions {
         return PromotionState.AVAILABLE_BENEFIT
     }
 
-    private fun calculateTotalProductCount(promotion: Promotion, productCountToPurchase: Int) =
-        if (promotion.countOfBuy == 1) {
-            productCountToPurchase + (productCountToPurchase / 2)
-        } else {
-            productCountToPurchase + (productCountToPurchase / 2)
+    private fun calculateTotalProductCount(promotion: Promotion, productCountToPurchase: Int): Int {
+        if (promotion.countOfBuy == ONE_PLUS_ONE_PROMOTION_BUY_COUNT) {
+            return productCountToPurchase + (productCountToPurchase / ONE_PLUS_ONE_PROMOTION_GET_COUNT + ONE_PLUS_ONE_PROMOTION_BUY_COUNT)
         }
+        return productCountToPurchase + (productCountToPurchase / TWO_PLUS_ONE_PROMOTION_BUY_COUNT + TWO_PLUS_ONE_PROMOTION_GET_COUNT)
+    }
 
     private fun isNotEnoughStock(totalProductCount: Int, promotionStock: Int): Boolean {
         return totalProductCount > promotionStock
     }
 
     private fun isEligibleOneBuyOneGetPromotion(promotion: Promotion, productCountToPurchase: Int): Boolean {
-        return promotion.countOfBuy == 1 && productCountToPurchase % 2 != 0
+        val promotionSetSize = ONE_PLUS_ONE_PROMOTION_GET_COUNT + ONE_PLUS_ONE_PROMOTION_BUY_COUNT
+        return promotion.countOfBuy == ONE_PLUS_ONE_PROMOTION_BUY_COUNT && productCountToPurchase % promotionSetSize != 0
     }
 
     private fun isEligibleTwoBuyOneGetPromotion(promotion: Promotion, productCountToPurchase: Int): Boolean {
-        return promotion.countOfBuy == 2 && productCountToPurchase % 3 != 0
+        val promotionSetSize = TWO_PLUS_ONE_PROMOTION_BUY_COUNT + TWO_PLUS_ONE_PROMOTION_GET_COUNT
+        return promotion.countOfBuy == TWO_PLUS_ONE_PROMOTION_BUY_COUNT && productCountToPurchase % promotionSetSize != 0
     }
 
     fun findInsufficientPromotionQuantity(product: Map<String, Int>): Int {
@@ -121,5 +123,9 @@ class Promotions {
         private const val PROMOTION_GET_COUNT_INDEX = 2
         private const val PROMOTION_START_DATE_INDEX = 3
         private const val PROMOTION_END_DATE_INDEX = 4
+        private const val ONE_PLUS_ONE_PROMOTION_BUY_COUNT = 1
+        private const val ONE_PLUS_ONE_PROMOTION_GET_COUNT = 1
+        private const val TWO_PLUS_ONE_PROMOTION_BUY_COUNT = 2
+        private const val TWO_PLUS_ONE_PROMOTION_GET_COUNT = 1
     }
 }
