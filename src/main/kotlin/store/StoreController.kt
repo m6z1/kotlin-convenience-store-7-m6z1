@@ -240,13 +240,18 @@ class StoreController(
         while (true) {
             try {
                 val morePurchaseState = ResponseState.from(inputView.readMorePurchase())
-                when (morePurchaseState) {
-                    ResponseState.POSITIVE -> restart()
-                    ResponseState.NEGATIVE -> break
-                }
+                executeEachLogic(morePurchaseState)
+                break
             } catch (e: IllegalArgumentException) {
                 println(e.message)
             }
+        }
+    }
+
+    private fun executeEachLogic(morePurchaseState: ResponseState) {
+        when (morePurchaseState) {
+            ResponseState.POSITIVE -> restart()
+            ResponseState.NEGATIVE -> Unit
         }
     }
 
