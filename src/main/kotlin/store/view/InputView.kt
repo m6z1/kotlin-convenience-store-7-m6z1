@@ -9,9 +9,9 @@ class InputView {
         inputLines.forEach { inputLine -> validateInputLine(inputLine) }
 
         return inputLines.map { inputLine ->
-            val product = inputLine.replace(START_FORM_OF_PRODUCT_TO_PURCHASE.toString(), EMPTY_VALUE)
-                .replace(END_FORM_OF_PRODUCT_TO_PURCHASE.toString(), EMPTY_VALUE)
+            val product = formatProductToPurchase(inputLine)
             val (name, quantity) = product.split(DASH_DELIMITER)
+            validateProductToPurchase(name, quantity)
 
             mapOf(name to quantity.toInt())
         }
@@ -20,6 +20,19 @@ class InputView {
     private fun validateInputLine(inputLine: String) {
         require(inputLine.first() == START_FORM_OF_PRODUCT_TO_PURCHASE && inputLine.last() == END_FORM_OF_PRODUCT_TO_PURCHASE) { "[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요." }
         require(inputLine.isNotBlank()) { "[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요." }
+        require(inputLine.contains(" ").not()) { "[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요." }
+    }
+
+    private fun formatProductToPurchase(inputLine: String): String {
+        val product = inputLine
+            .replace(START_FORM_OF_PRODUCT_TO_PURCHASE.toString(), EMPTY_VALUE)
+            .replace(END_FORM_OF_PRODUCT_TO_PURCHASE.toString(), EMPTY_VALUE)
+        return product
+    }
+
+    private fun validateProductToPurchase(productName: String, quantity: String) {
+        require(quantity.toIntOrNull() != null) { "[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요." }
+        require(quantity.toInt() > 0) { "[ERROR] 잘못된 입력입니다. 다시 입력해 주세요." }
     }
 
     fun readMembershipState(): String {
