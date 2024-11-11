@@ -35,21 +35,40 @@ class OutputView {
         totalAmount: Int,
         promotionDiscount: Int,
         membershipDiscount: Int,
-        amountDue: Int
+        amountDue: Int,
     ) {
+        println()
         println("===========W 편의점=============")
         println("상품명\t\t수량\t금액")
+        printPurchasedProducts(purchasedProducts)
+        printlnFreebies(freebies)
+        println("==============================")
+        printTotalAmount(purchasedProducts, totalAmount)
+        println("행사할인\t\t\t-${THOUSAND_COMMA.format(promotionDiscount)}")
+        println("멤버십할인\t\t\t-${THOUSAND_COMMA.format(membershipDiscount)}")
+        println("내실돈\t\t\t${THOUSAND_COMMA.format(amountDue)}")
+    }
+
+    private fun printPurchasedProducts(purchasedProducts: List<PurchasedProduct>) {
         purchasedProducts.forEach { product ->
             val formattedPrice = THOUSAND_COMMA.format(product.price * product.count)
             println("${product.name}\t\t${product.count}\t$formattedPrice")
         }
+    }
+
+    private fun printlnFreebies(freebies: List<Map<String, Int>>?) {
         if (freebies?.isNotEmpty() == true) {
             println("===========증\t정=============")
             freebies.forEach { freebie ->
                 println("${freebie.keys.first()}\t\t${freebie.values.first()}")
             }
         }
-        println("==============================")
+    }
+
+    private fun printTotalAmount(
+        purchasedProducts: List<PurchasedProduct>,
+        totalAmount: Int
+    ) {
         println(
             "총구매액\t\t${THOUSAND_COMMA.format(purchasedProducts.sumOf { it.count })}\t${
                 THOUSAND_COMMA.format(
@@ -57,9 +76,6 @@ class OutputView {
                 )
             }"
         )
-        println("행사할인\t\t\t-${THOUSAND_COMMA.format(promotionDiscount)}")
-        println("멤버십할인\t\t\t-${THOUSAND_COMMA.format(membershipDiscount)}")
-        println("내실돈\t\t\t${THOUSAND_COMMA.format(amountDue)}")
     }
 
     companion object {
