@@ -15,8 +15,8 @@ class StoreController(
     private val outputView: OutputView,
     private val productsManager: ProductsManager,
     private val promotions: Promotions,
+    private val receipt: Receipt,
 ) {
-    private val receipt = Receipt()
     private lateinit var productsToPurchase: List<Map<String, Int>>
 
     fun start() {
