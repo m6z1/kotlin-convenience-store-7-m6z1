@@ -68,12 +68,11 @@ class ProductsManager {
     }
 
     fun findProductPromotion(productName: String): String {
-        return products.firstOrNull { it.name == productName }?.promotion?.takeIf { it.isNotEmpty() } ?: ""
+        return products.first { it.name == productName }.promotion
     }
 
     fun findPromotionStock(productName: String): Int {
-        val promotionProduct = products.firstOrNull { it.name == productName && it.promotion != NONE_PROMOTION }
-            ?: throw IllegalArgumentException("[ERROR] 프로모션 재고가 없습니다.")
+        val promotionProduct = products.first { it.name == productName && it.promotion != NONE_PROMOTION }
         return promotionProduct.quantity
     }
 
