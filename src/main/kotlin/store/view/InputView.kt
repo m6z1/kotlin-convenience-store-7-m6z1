@@ -11,7 +11,7 @@ class InputView {
         return inputLines.map { inputLine ->
             val product = formatProductToPurchase(inputLine)
             val (name, quantity) = product.split(DASH_DELIMITER)
-            validateProductToPurchase(name, quantity)
+            validateProductToPurchase(quantity)
 
             mapOf(name to quantity.toInt())
         }
@@ -30,7 +30,7 @@ class InputView {
         return product
     }
 
-    private fun validateProductToPurchase(productName: String, quantity: String) {
+    private fun validateProductToPurchase(quantity: String) {
         require(quantity.toIntOrNull() != null) { "[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요." }
         require(quantity.toInt() > 0) { "[ERROR] 잘못된 입력입니다. 다시 입력해 주세요." }
     }
