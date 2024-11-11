@@ -83,7 +83,7 @@ class ProductsManager {
     fun updateLatestProduct(purchasedProduct: PurchasedProduct, isPromotionPeriod: Boolean) {
         _products.forEachIndexed { index, product ->
             if (isPromotionPeriod && product.name == purchasedProduct.name && product.promotion != NONE_PROMOTION) {
-                _products[index] = product.copy(quantity = product.quantity - purchasedProduct.count)
+                updatePromotionProduct(product, purchasedProduct, index)
                 return@forEachIndexed
             }
 
@@ -92,6 +92,25 @@ class ProductsManager {
                 return@forEachIndexed
             }
         }
+    }
+
+    private fun updatePromotionProduct(
+        product: Product,
+        purchasedProduct: PurchasedProduct,
+        index: Int
+    ) {
+        if (checkOutOfStockPromotion(product.quantity, purchasedProduct.count)) {
+            _products[index] = product.copy(quantity = INITIAL_QUANTITY)
+            _products[index + 1] =
+                _products[index + 1].copy(quantity = _products[index + 1].quantity - (purchasedProduct.count - product.quantity))
+            return
+        }
+        _products[index] = product.copy(quantity = product.quantity - purchasedProduct.count)
+        return
+    }
+
+    private fun checkOutOfStockPromotion(promotionStock: Int, purchasedProductCount: Int): Boolean {
+        return promotionStock - purchasedProductCount < 0
     }
 
     companion object {
