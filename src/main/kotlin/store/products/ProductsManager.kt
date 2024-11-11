@@ -101,8 +101,8 @@ class ProductsManager {
     ) {
         if (checkOutOfStockPromotion(product.quantity, purchasedProduct.count)) {
             _products[index] = product.copy(quantity = INITIAL_QUANTITY)
-            _products[index + 1] =
-                _products[index + 1].copy(quantity = _products[index + 1].quantity - (purchasedProduct.count - product.quantity))
+            _products[index + CORRECTION_VALUE] =
+                _products[index + CORRECTION_VALUE].copy(quantity = _products[index + CORRECTION_VALUE].quantity - (purchasedProduct.count - product.quantity))
             return
         }
         _products[index] = product.copy(quantity = product.quantity - purchasedProduct.count)
@@ -110,7 +110,7 @@ class ProductsManager {
     }
 
     private fun checkOutOfStockPromotion(promotionStock: Int, purchasedProductCount: Int): Boolean {
-        return promotionStock - purchasedProductCount < 0
+        return promotionStock - purchasedProductCount < INITIAL_QUANTITY
     }
 
     companion object {
@@ -122,6 +122,7 @@ class ProductsManager {
         private const val PRODUCT_QUANTITY_INDEX = 2
         private const val PRODUCT_PROMOTION_INDEX = 3
         private const val STANDARD_ADDING_NONE_PROMOTION_PRODUCT = 1
+        private const val CORRECTION_VALUE = 1
         const val INITIAL_QUANTITY = 0
         const val NONE_PROMOTION = "null"
     }
