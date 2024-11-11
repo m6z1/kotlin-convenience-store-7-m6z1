@@ -120,6 +120,22 @@ class ApplicationTest : NsTest() {
         }
     }
 
+    @Test
+    fun `여러 개의 프로모션 상품 및 일반 상품 구매(멤버십 혜택 받지 않을 경우)`() {
+        assertSimpleTest {
+            run("[콜라-2],[물-2],[비타민워터-5]", "Y", "N", "N")
+            assertThat(output().replace("\\s".toRegex(), "")).contains("내실돈10,500")
+        }
+    }
+
+    @Test
+    fun `여러 개의 프로모션 상품 및 일반 상품 구매(멤버십 혜택 받을 경우)`() {
+        assertSimpleTest {
+            run("[콜라-2],[물-2],[비타민워터-5]", "Y", "Y", "N")
+            assertThat(output().replace("\\s".toRegex(), "")).contains("내실돈7,950")
+        }
+    }
+
     override fun runMain() {
         main()
     }
